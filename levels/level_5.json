@@ -1,0 +1,531 @@
+{
+  "name": "Level 5 - The Final Ascent",
+  "author": "botyarajump",
+  "version": 1,
+  "height": 10000,
+  "grid_size": 32,
+  "background_theme": "lava",
+  "platforms": [
+    {
+      "type": "normal",
+      "x": 5,
+      "y": 145,
+      "width": 3
+    },
+    {
+      "type": "disappearing",
+      "x": 1,
+      "y": 141,
+      "width": 2
+    },
+    {
+      "type": "breakable",
+      "x": 7,
+      "y": 138,
+      "width": 2
+    },
+    {
+      "type": "moving",
+      "x": 6,
+      "y": 135,
+      "width": 2,
+      "range": 5,
+      "speed": 3
+    },
+    {
+      "type": "normal",
+      "x": 7,
+      "y": 132,
+      "width": 2
+    },
+    {
+      "type": "normal",
+      "x": 1,
+      "y": 129,
+      "width": 2
+    },
+    {
+      "type": "spring",
+      "x": 6,
+      "y": 126,
+      "width": 2
+    },
+    {
+      "type": "normal",
+      "x": 4,
+      "y": 123,
+      "width": 2
+    },
+    {
+      "type": "disappearing",
+      "x": 4,
+      "y": 120,
+      "width": 2
+    },
+    {
+      "type": "breakable",
+      "x": 6,
+      "y": 117,
+      "width": 2
+    },
+    {
+      "type": "moving",
+      "x": 1,
+      "y": 114,
+      "width": 2,
+      "range": 5,
+      "speed": 3
+    },
+    {
+      "type": "normal",
+      "x": 7,
+      "y": 111,
+      "width": 2
+    },
+    {
+      "type": "normal",
+      "x": 6,
+      "y": 108,
+      "width": 2
+    },
+    {
+      "type": "spring",
+      "x": 7,
+      "y": 105,
+      "width": 2
+    },
+    {
+      "type": "normal",
+      "x": 1,
+      "y": 102,
+      "width": 2
+    },
+    {
+      "type": "disappearing",
+      "x": 6,
+      "y": 99,
+      "width": 2
+    },
+    {
+      "type": "breakable",
+      "x": 4,
+      "y": 96,
+      "width": 2
+    },
+    {
+      "type": "moving",
+      "x": 4,
+      "y": 93,
+      "width": 2,
+      "range": 5,
+      "speed": 3
+    },
+    {
+      "type": "normal",
+      "x": 6,
+      "y": 90,
+      "width": 2
+    },
+    {
+      "type": "normal",
+      "x": 1,
+      "y": 87,
+      "width": 2
+    },
+    {
+      "type": "spring",
+      "x": 7,
+      "y": 84,
+      "width": 2
+    },
+    {
+      "type": "normal",
+      "x": 6,
+      "y": 81,
+      "width": 2
+    },
+    {
+      "type": "disappearing",
+      "x": 7,
+      "y": 78,
+      "width": 2
+    },
+    {
+      "type": "breakable",
+      "x": 1,
+      "y": 75,
+      "width": 2
+    },
+    {
+      "type": "moving",
+      "x": 6,
+      "y": 72,
+      "width": 2,
+      "range": 5,
+      "speed": 3
+    },
+    {
+      "type": "normal",
+      "x": 4,
+      "y": 69,
+      "width": 2
+    },
+    {
+      "type": "normal",
+      "x": 4,
+      "y": 66,
+      "width": 2
+    },
+    {
+      "type": "spring",
+      "x": 6,
+      "y": 63,
+      "width": 2
+    },
+    {
+      "type": "normal",
+      "x": 1,
+      "y": 60,
+      "width": 2
+    },
+    {
+      "type": "disappearing",
+      "x": 7,
+      "y": 57,
+      "width": 2
+    },
+    {
+      "type": "breakable",
+      "x": 6,
+      "y": 54,
+      "width": 2
+    },
+    {
+      "type": "moving",
+      "x": 7,
+      "y": 51,
+      "width": 2,
+      "range": 5,
+      "speed": 3
+    },
+    {
+      "type": "normal",
+      "x": 1,
+      "y": 48,
+      "width": 2
+    },
+    {
+      "type": "normal",
+      "x": 6,
+      "y": 45,
+      "width": 2
+    },
+    {
+      "type": "spring",
+      "x": 4,
+      "y": 42,
+      "width": 2
+    },
+    {
+      "type": "normal",
+      "x": 4,
+      "y": 39,
+      "width": 2
+    },
+    {
+      "type": "disappearing",
+      "x": 6,
+      "y": 36,
+      "width": 2
+    },
+    {
+      "type": "breakable",
+      "x": 1,
+      "y": 33,
+      "width": 2
+    },
+    {
+      "type": "moving",
+      "x": 7,
+      "y": 30,
+      "width": 2,
+      "range": 5,
+      "speed": 3
+    },
+    {
+      "type": "normal",
+      "x": 6,
+      "y": 27,
+      "width": 2
+    },
+    {
+      "type": "normal",
+      "x": 7,
+      "y": 24,
+      "width": 2
+    },
+    {
+      "type": "spring",
+      "x": 1,
+      "y": 21,
+      "width": 2
+    },
+    {
+      "type": "normal",
+      "x": 6,
+      "y": 18,
+      "width": 2
+    },
+    {
+      "type": "disappearing",
+      "x": 4,
+      "y": 15,
+      "width": 2
+    },
+    {
+      "type": "breakable",
+      "x": 4,
+      "y": 12,
+      "width": 2
+    },
+    {
+      "type": "moving",
+      "x": 6,
+      "y": 9,
+      "width": 2,
+      "range": 5,
+      "speed": 3
+    },
+    {
+      "type": "normal",
+      "x": 1,
+      "y": 6,
+      "width": 2
+    },
+    {
+      "type": "normal",
+      "x": 7,
+      "y": 3,
+      "width": 2
+    },
+    {
+      "type": "spring",
+      "x": 6,
+      "y": 0,
+      "width": 2
+    },
+    {
+      "type": "normal",
+      "x": 7,
+      "y": -3,
+      "width": 2
+    },
+    {
+      "type": "disappearing",
+      "x": 1,
+      "y": -6,
+      "width": 2
+    }
+  ],
+  "enemies": [
+    {
+      "type": "red_ball",
+      "x": 5,
+      "y": 133
+    },
+    {
+      "type": "ufo",
+      "x": 3,
+      "y": 121
+    },
+    {
+      "type": "ghost",
+      "x": 6,
+      "y": 109
+    },
+    {
+      "type": "slug",
+      "x": 5,
+      "y": 97
+    },
+    {
+      "type": "snake",
+      "x": 1,
+      "y": 85
+    },
+    {
+      "type": "bat",
+      "x": 1,
+      "y": 73
+    },
+    {
+      "type": "evil_cloud",
+      "x": 5,
+      "y": 61
+    },
+    {
+      "type": "red_ball",
+      "x": 6,
+      "y": 49
+    },
+    {
+      "type": "ufo",
+      "x": 3,
+      "y": 37
+    },
+    {
+      "type": "ghost",
+      "x": 5,
+      "y": 25
+    },
+    {
+      "type": "slug",
+      "x": 3,
+      "y": 13
+    },
+    {
+      "type": "snake",
+      "x": 6,
+      "y": 1
+    },
+    {
+      "type": "black_hole",
+      "x": 5,
+      "y": 6
+    }
+  ],
+  "coins": [
+    {
+      "x": 2,
+      "y": 139
+    },
+    {
+      "x": 7,
+      "y": 133
+    },
+    {
+      "x": 2,
+      "y": 127
+    },
+    {
+      "x": 5,
+      "y": 121
+    },
+    {
+      "x": 7,
+      "y": 115
+    },
+    {
+      "x": 8,
+      "y": 109
+    },
+    {
+      "x": 8,
+      "y": 103
+    },
+    {
+      "x": 7,
+      "y": 97
+    },
+    {
+      "x": 5,
+      "y": 91
+    },
+    {
+      "x": 2,
+      "y": 85
+    },
+    {
+      "x": 7,
+      "y": 79
+    },
+    {
+      "x": 2,
+      "y": 73
+    },
+    {
+      "x": 5,
+      "y": 67
+    },
+    {
+      "x": 7,
+      "y": 61
+    },
+    {
+      "x": 8,
+      "y": 55
+    },
+    {
+      "x": 8,
+      "y": 49
+    },
+    {
+      "x": 7,
+      "y": 43
+    },
+    {
+      "x": 5,
+      "y": 37
+    },
+    {
+      "x": 2,
+      "y": 31
+    },
+    {
+      "x": 7,
+      "y": 25
+    },
+    {
+      "x": 2,
+      "y": 19
+    },
+    {
+      "x": 5,
+      "y": 13
+    },
+    {
+      "x": 7,
+      "y": 7
+    },
+    {
+      "x": 8,
+      "y": 1
+    },
+    {
+      "x": 8,
+      "y": -5
+    }
+  ],
+  "powerups": [
+    {
+      "type": "jetpack",
+      "x": 3,
+      "y": 100
+    },
+    {
+      "type": "blaster",
+      "x": 8,
+      "y": 70
+    },
+    {
+      "type": "shield",
+      "x": 5,
+      "y": 16
+    },
+    {
+      "type": "magnet",
+      "x": 6,
+      "y": 120
+    }
+  ],
+  "start": {
+    "x": 6,
+    "y": 144
+  },
+  "finish_y": -4,
+  "star_scores": [
+    800,
+    1600,
+    3000
+  ]
+}

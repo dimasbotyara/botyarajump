@@ -1,0 +1,398 @@
+{
+  "name": "Level 4 - Dark Forces",
+  "author": "botyarajump",
+  "version": 1,
+  "height": 8000,
+  "grid_size": 32,
+  "background_theme": "space",
+  "platforms": [
+    {
+      "type": "normal",
+      "x": 5,
+      "y": 145,
+      "width": 3
+    },
+    {
+      "type": "normal",
+      "x": 1,
+      "y": 141,
+      "width": 2
+    },
+    {
+      "type": "normal",
+      "x": 5,
+      "y": 138,
+      "width": 2
+    },
+    {
+      "type": "normal",
+      "x": 9,
+      "y": 135,
+      "width": 2
+    },
+    {
+      "type": "moving",
+      "x": 4,
+      "y": 132,
+      "width": 2,
+      "range": 4,
+      "speed": 2.5
+    },
+    {
+      "type": "normal",
+      "x": 8,
+      "y": 129,
+      "width": 2
+    },
+    {
+      "type": "normal",
+      "x": 3,
+      "y": 126,
+      "width": 2
+    },
+    {
+      "type": "normal",
+      "x": 7,
+      "y": 123,
+      "width": 2
+    },
+    {
+      "type": "moving",
+      "x": 2,
+      "y": 120,
+      "width": 2,
+      "range": 4,
+      "speed": 2.5
+    },
+    {
+      "type": "normal",
+      "x": 6,
+      "y": 117,
+      "width": 2
+    },
+    {
+      "type": "normal",
+      "x": 1,
+      "y": 114,
+      "width": 2
+    },
+    {
+      "type": "normal",
+      "x": 5,
+      "y": 111,
+      "width": 2
+    },
+    {
+      "type": "moving",
+      "x": 9,
+      "y": 108,
+      "width": 2,
+      "range": 4,
+      "speed": 2.5
+    },
+    {
+      "type": "normal",
+      "x": 4,
+      "y": 105,
+      "width": 2
+    },
+    {
+      "type": "normal",
+      "x": 8,
+      "y": 102,
+      "width": 2
+    },
+    {
+      "type": "normal",
+      "x": 3,
+      "y": 99,
+      "width": 2
+    },
+    {
+      "type": "moving",
+      "x": 7,
+      "y": 96,
+      "width": 2,
+      "range": 4,
+      "speed": 2.5
+    },
+    {
+      "type": "normal",
+      "x": 2,
+      "y": 93,
+      "width": 2
+    },
+    {
+      "type": "normal",
+      "x": 6,
+      "y": 90,
+      "width": 2
+    },
+    {
+      "type": "normal",
+      "x": 1,
+      "y": 87,
+      "width": 2
+    },
+    {
+      "type": "moving",
+      "x": 5,
+      "y": 84,
+      "width": 2,
+      "range": 4,
+      "speed": 2.5
+    },
+    {
+      "type": "normal",
+      "x": 9,
+      "y": 81,
+      "width": 2
+    },
+    {
+      "type": "normal",
+      "x": 4,
+      "y": 78,
+      "width": 2
+    },
+    {
+      "type": "normal",
+      "x": 8,
+      "y": 75,
+      "width": 2
+    },
+    {
+      "type": "moving",
+      "x": 3,
+      "y": 72,
+      "width": 2,
+      "range": 4,
+      "speed": 2.5
+    },
+    {
+      "type": "normal",
+      "x": 7,
+      "y": 69,
+      "width": 2
+    },
+    {
+      "type": "normal",
+      "x": 2,
+      "y": 66,
+      "width": 2
+    },
+    {
+      "type": "normal",
+      "x": 6,
+      "y": 63,
+      "width": 2
+    },
+    {
+      "type": "moving",
+      "x": 1,
+      "y": 60,
+      "width": 2,
+      "range": 4,
+      "speed": 2.5
+    },
+    {
+      "type": "normal",
+      "x": 5,
+      "y": 57,
+      "width": 2
+    },
+    {
+      "type": "normal",
+      "x": 9,
+      "y": 54,
+      "width": 2
+    },
+    {
+      "type": "normal",
+      "x": 4,
+      "y": 51,
+      "width": 2
+    },
+    {
+      "type": "moving",
+      "x": 8,
+      "y": 48,
+      "width": 2,
+      "range": 4,
+      "speed": 2.5
+    },
+    {
+      "type": "normal",
+      "x": 3,
+      "y": 45,
+      "width": 2
+    },
+    {
+      "type": "normal",
+      "x": 7,
+      "y": 42,
+      "width": 2
+    },
+    {
+      "type": "normal",
+      "x": 2,
+      "y": 39,
+      "width": 2
+    },
+    {
+      "type": "moving",
+      "x": 6,
+      "y": 36,
+      "width": 2,
+      "range": 4,
+      "speed": 2.5
+    },
+    {
+      "type": "normal",
+      "x": 1,
+      "y": 33,
+      "width": 2
+    },
+    {
+      "type": "normal",
+      "x": 5,
+      "y": 30,
+      "width": 2
+    },
+    {
+      "type": "normal",
+      "x": 9,
+      "y": 27,
+      "width": 2
+    },
+    {
+      "type": "moving",
+      "x": 4,
+      "y": 24,
+      "width": 2,
+      "range": 4,
+      "speed": 2.5
+    }
+  ],
+  "enemies": [
+    {
+      "type": "red_ball",
+      "x": 10,
+      "y": 133
+    },
+    {
+      "type": "ghost",
+      "x": 3,
+      "y": 118
+    },
+    {
+      "type": "slug",
+      "x": 5,
+      "y": 103
+    },
+    {
+      "type": "bat",
+      "x": 7,
+      "y": 88
+    },
+    {
+      "type": "red_ball",
+      "x": 9,
+      "y": 73
+    },
+    {
+      "type": "ghost",
+      "x": 2,
+      "y": 58
+    },
+    {
+      "type": "slug",
+      "x": 4,
+      "y": 43
+    },
+    {
+      "type": "bat",
+      "x": 6,
+      "y": 28
+    }
+  ],
+  "coins": [
+    {
+      "x": 1,
+      "y": 139
+    },
+    {
+      "x": 4,
+      "y": 130
+    },
+    {
+      "x": 7,
+      "y": 121
+    },
+    {
+      "x": 1,
+      "y": 112
+    },
+    {
+      "x": 4,
+      "y": 103
+    },
+    {
+      "x": 7,
+      "y": 94
+    },
+    {
+      "x": 1,
+      "y": 85
+    },
+    {
+      "x": 4,
+      "y": 76
+    },
+    {
+      "x": 7,
+      "y": 67
+    },
+    {
+      "x": 1,
+      "y": 58
+    },
+    {
+      "x": 4,
+      "y": 49
+    },
+    {
+      "x": 7,
+      "y": 40
+    },
+    {
+      "x": 1,
+      "y": 31
+    },
+    {
+      "x": 4,
+      "y": 22
+    }
+  ],
+  "powerups": [
+    {
+      "type": "blaster",
+      "x": 4,
+      "y": 100
+    },
+    {
+      "type": "shield",
+      "x": 7,
+      "y": 60
+    }
+  ],
+  "start": {
+    "x": 6,
+    "y": 144
+  },
+  "finish_y": 26,
+  "star_scores": [
+    600,
+    1200,
+    2500
+  ]
+}

@@ -1,0 +1,286 @@
+{
+  "name": "Level 2 - New Foes",
+  "author": "botyarajump",
+  "version": 1,
+  "height": 6000,
+  "grid_size": 32,
+  "background_theme": "sunset",
+  "platforms": [
+    {
+      "type": "normal",
+      "x": 5,
+      "y": 145,
+      "width": 3
+    },
+    {
+      "type": "normal",
+      "x": 1,
+      "y": 141,
+      "width": 2
+    },
+    {
+      "type": "normal",
+      "x": 4,
+      "y": 138,
+      "width": 2
+    },
+    {
+      "type": "normal",
+      "x": 7,
+      "y": 135,
+      "width": 2
+    },
+    {
+      "type": "moving",
+      "x": 10,
+      "y": 132,
+      "width": 2,
+      "range": 3,
+      "speed": 2
+    },
+    {
+      "type": "normal",
+      "x": 3,
+      "y": 129,
+      "width": 2
+    },
+    {
+      "type": "normal",
+      "x": 6,
+      "y": 126,
+      "width": 2
+    },
+    {
+      "type": "normal",
+      "x": 9,
+      "y": 123,
+      "width": 2
+    },
+    {
+      "type": "normal",
+      "x": 2,
+      "y": 120,
+      "width": 2
+    },
+    {
+      "type": "moving",
+      "x": 5,
+      "y": 117,
+      "width": 2,
+      "range": 3,
+      "speed": 2
+    },
+    {
+      "type": "normal",
+      "x": 8,
+      "y": 114,
+      "width": 2
+    },
+    {
+      "type": "normal",
+      "x": 1,
+      "y": 111,
+      "width": 2
+    },
+    {
+      "type": "normal",
+      "x": 4,
+      "y": 108,
+      "width": 2
+    },
+    {
+      "type": "normal",
+      "x": 7,
+      "y": 105,
+      "width": 2
+    },
+    {
+      "type": "moving",
+      "x": 10,
+      "y": 102,
+      "width": 2,
+      "range": 3,
+      "speed": 2
+    },
+    {
+      "type": "normal",
+      "x": 3,
+      "y": 99,
+      "width": 2
+    },
+    {
+      "type": "normal",
+      "x": 6,
+      "y": 96,
+      "width": 2
+    },
+    {
+      "type": "normal",
+      "x": 9,
+      "y": 93,
+      "width": 2
+    },
+    {
+      "type": "normal",
+      "x": 2,
+      "y": 90,
+      "width": 2
+    },
+    {
+      "type": "moving",
+      "x": 5,
+      "y": 87,
+      "width": 2,
+      "range": 3,
+      "speed": 2
+    },
+    {
+      "type": "normal",
+      "x": 8,
+      "y": 84,
+      "width": 2
+    },
+    {
+      "type": "normal",
+      "x": 1,
+      "y": 81,
+      "width": 2
+    },
+    {
+      "type": "normal",
+      "x": 4,
+      "y": 78,
+      "width": 2
+    },
+    {
+      "type": "normal",
+      "x": 7,
+      "y": 75,
+      "width": 2
+    },
+    {
+      "type": "moving",
+      "x": 10,
+      "y": 72,
+      "width": 2,
+      "range": 3,
+      "speed": 2
+    },
+    {
+      "type": "normal",
+      "x": 3,
+      "y": 69,
+      "width": 2
+    },
+    {
+      "type": "normal",
+      "x": 6,
+      "y": 66,
+      "width": 2
+    },
+    {
+      "type": "normal",
+      "x": 9,
+      "y": 63,
+      "width": 2
+    },
+    {
+      "type": "normal",
+      "x": 2,
+      "y": 60,
+      "width": 2
+    },
+    {
+      "type": "moving",
+      "x": 5,
+      "y": 57,
+      "width": 2,
+      "range": 3,
+      "speed": 2
+    },
+    {
+      "type": "normal",
+      "x": 8,
+      "y": 54,
+      "width": 2
+    }
+  ],
+  "enemies": [
+    {
+      "type": "slug",
+      "x": 4,
+      "y": 128
+    },
+    {
+      "type": "slug",
+      "x": 2,
+      "y": 110
+    },
+    {
+      "type": "slug",
+      "x": 10,
+      "y": 92
+    },
+    {
+      "type": "slug",
+      "x": 8,
+      "y": 74
+    },
+    {
+      "type": "slug",
+      "x": 6,
+      "y": 56
+    }
+  ],
+  "coins": [
+    {
+      "x": 2,
+      "y": 139
+    },
+    {
+      "x": 4,
+      "y": 127
+    },
+    {
+      "x": 6,
+      "y": 115
+    },
+    {
+      "x": 8,
+      "y": 103
+    },
+    {
+      "x": 10,
+      "y": 91
+    },
+    {
+      "x": 2,
+      "y": 79
+    },
+    {
+      "x": 4,
+      "y": 67
+    },
+    {
+      "x": 6,
+      "y": 55
+    }
+  ],
+  "powerups": [
+    {
+      "type": "shield",
+      "x": 6,
+      "y": 100
+    }
+  ],
+  "start": {
+    "x": 6,
+    "y": 144
+  },
+  "finish_y": 56,
+  "star_scores": [
+    400,
+    800,
+    1500
+  ]
+}

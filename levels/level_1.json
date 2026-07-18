@@ -1,0 +1,212 @@
+{
+  "name": "Level 1 - First Steps",
+  "author": "botyarajump",
+  "version": 1,
+  "height": 5000,
+  "grid_size": 32,
+  "background_theme": "day",
+  "platforms": [
+    {
+      "type": "normal",
+      "x": 5,
+      "y": 145,
+      "width": 3
+    },
+    {
+      "type": "normal",
+      "x": 2,
+      "y": 141,
+      "width": 2
+    },
+    {
+      "type": "normal",
+      "x": 4,
+      "y": 138,
+      "width": 2
+    },
+    {
+      "type": "normal",
+      "x": 6,
+      "y": 135,
+      "width": 2
+    },
+    {
+      "type": "normal",
+      "x": 8,
+      "y": 132,
+      "width": 2
+    },
+    {
+      "type": "normal",
+      "x": 10,
+      "y": 129,
+      "width": 2
+    },
+    {
+      "type": "normal",
+      "x": 12,
+      "y": 126,
+      "width": 2
+    },
+    {
+      "type": "normal",
+      "x": 14,
+      "y": 123,
+      "width": 2
+    },
+    {
+      "type": "normal",
+      "x": 2,
+      "y": 120,
+      "width": 2
+    },
+    {
+      "type": "normal",
+      "x": 4,
+      "y": 117,
+      "width": 2
+    },
+    {
+      "type": "normal",
+      "x": 6,
+      "y": 114,
+      "width": 2
+    },
+    {
+      "type": "normal",
+      "x": 8,
+      "y": 111,
+      "width": 2
+    },
+    {
+      "type": "normal",
+      "x": 10,
+      "y": 108,
+      "width": 2
+    },
+    {
+      "type": "normal",
+      "x": 12,
+      "y": 105,
+      "width": 2
+    },
+    {
+      "type": "normal",
+      "x": 14,
+      "y": 102,
+      "width": 2
+    },
+    {
+      "type": "normal",
+      "x": 2,
+      "y": 99,
+      "width": 2
+    },
+    {
+      "type": "normal",
+      "x": 4,
+      "y": 96,
+      "width": 2
+    },
+    {
+      "type": "normal",
+      "x": 6,
+      "y": 93,
+      "width": 2
+    },
+    {
+      "type": "normal",
+      "x": 8,
+      "y": 90,
+      "width": 2
+    },
+    {
+      "type": "normal",
+      "x": 10,
+      "y": 87,
+      "width": 2
+    },
+    {
+      "type": "normal",
+      "x": 12,
+      "y": 84,
+      "width": 2
+    },
+    {
+      "type": "normal",
+      "x": 14,
+      "y": 81,
+      "width": 2
+    },
+    {
+      "type": "normal",
+      "x": 2,
+      "y": 78,
+      "width": 2
+    },
+    {
+      "type": "normal",
+      "x": 4,
+      "y": 75,
+      "width": 2
+    },
+    {
+      "type": "normal",
+      "x": 6,
+      "y": 72,
+      "width": 2
+    },
+    {
+      "type": "normal",
+      "x": 8,
+      "y": 69,
+      "width": 2
+    }
+  ],
+  "enemies": [],
+  "coins": [
+    {
+      "x": 4,
+      "y": 140
+    },
+    {
+      "x": 7,
+      "y": 128
+    },
+    {
+      "x": 10,
+      "y": 116
+    },
+    {
+      "x": 13,
+      "y": 104
+    },
+    {
+      "x": 16,
+      "y": 92
+    },
+    {
+      "x": 19,
+      "y": 80
+    },
+    {
+      "x": 22,
+      "y": 68
+    },
+    {
+      "x": 25,
+      "y": 56
+    }
+  ],
+  "powerups": [],
+  "start": {
+    "x": 6,
+    "y": 144
+  },
+  "finish_y": 71,
+  "star_scores": [
+    300,
+    600,
+    1000
+  ]
+}
