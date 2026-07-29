@@ -478,6 +478,39 @@ class ParticleSystem:
                 shape="line"
             ))
 
+    def emit_portal_swirl(self, x, y):
+        """Emit purple swirling energy for portal warp."""
+        for i in range(25):
+            angle = random.uniform(0, math.pi * 2)
+            spd = random.uniform(2, 6)
+            self.add(Particle(
+                x, y,
+                vx=math.cos(angle) * spd,
+                vy=math.sin(angle) * spd,
+                size=random.uniform(4, 8),
+                color=random.choice([
+                    (180, 80, 255), (140, 40, 220), (220, 150, 255)
+                ]),
+                lifetime=random.uniform(0.4, 0.8),
+                shape="star"
+            ))
+
+    def emit_stomp(self, x, y):
+        """Emit impact shockwave particles when stomping an enemy."""
+        for i in range(16):
+            angle = random.uniform(0, math.pi * 2)
+            spd = random.uniform(2, 5)
+            self.add(Particle(
+                x, y,
+                vx=math.cos(angle) * spd,
+                vy=math.sin(angle) * spd,
+                size=random.uniform(3, 6),
+                color=(255, 220, 100),
+                lifetime=random.uniform(0.2, 0.4),
+                gravity=0.1,
+                shape="circle"
+            ))
+
     def draw(self, surface, camera=None):
         """Draw all particles."""
         for particle in self.particles:

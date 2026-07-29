@@ -217,7 +217,7 @@ class Bat(Enemy):
 
 
 class BlackHole(Enemy):
-    """Black hole - pulls player toward it."""
+    """Black hole - pulls player toward its center."""
 
     def __init__(self, x, y, pull_range=120, pull_strength=2.0):
         super().__init__(x, y, 40, 40, Enemy.BLACK_HOLE)
@@ -243,12 +243,10 @@ class BlackHole(Enemy):
             # Calculate pull force (stronger when closer)
             force = self.pull_strength * (1 - dist / self.pull_range) * self.speed_mult
             dx = (cx - px) / dist * force
-            dy = (cy - py) / dist * force * 0.5  # Less vertical pull
+            dy = (cy - py) / dist * force
 
             player.vx += dx * dt * 60
-            # Only pull down, not up (to be fair)
-            if dy > 0:
-                player.vy += dy * dt * 60 * 0.3
+            player.vy += dy * dt * 60 * 0.5  # Less vertical pull for balance
 
     def _draw_specific(self, surface, x, y, w, h, renderer):
         renderer.draw_enemy_black_hole(surface, x, y, min(w, h))
@@ -332,11 +330,12 @@ class Snake(Enemy):
     """Snake enemy - occupies platform, shoots venom."""
 
     def __init__(self, x, y, platform_width=70):
-        super().__init__(x, y, platform_width, 15, Enemy.SNAKE)
+        super().__init__(x, y, 35, 15, Enemy.SNAKE)
+        self.start_x = x
         self.platform_width = platform_width
         self.shoot_cooldown = 3.0
         self.shoot_timer = random.uniform(0, self.shoot_cooldown)
-        self.speed = 0.5
+        self.speed = 0.6
         self.direction = 1
         self.score_value = 110
 
@@ -348,9 +347,14 @@ class Snake(Enemy):
         # Patrol on platform
         self.x += self.speed * self.direction * self.speed_mult * dt * 60
 
-        # Very small patrol range (snake stays roughly in place)
-        if abs(self.x - (self.x + self.platform_width // 2)) > self.platform_width // 3:
-            self.direction *= -1
+        # Proper patrol bounds
+        max_x = self.start_x + self.platform_width - self.width
+        if self.x >= max_x:
+            self.direction = -1
+            self.x = max_x
+        elif self.x <= self.start_x:
+            self.direction = 1
+            self.x = self.start_x
 
         self.facing_right = self.direction > 0
 
@@ -512,7 +516,7 @@ class EnemyManager:
         self.screen_width = screen_width
         self.screen_height = screen_height
         self.enemies = []
-        self.all_projectiles = []
+        # Removed all_projectiles list as it was unused and created overhead
 
         # Spawn tracking
         self.highest_spawn_y = screen_height
@@ -529,7 +533,6 @@ class EnemyManager:
     def reset(self):
         """Reset for new game."""
         self.enemies.clear()
-        self.all_projectiles.clear()
         self.highest_spawn_y = self.screen_height
         self._update_difficulty()
 
@@ -540,12 +543,6 @@ class EnemyManager:
             if enemy.alive:
                 enemy.speed_mult = self.speed_mult
                 enemy.update(dt, player)
-
-        # Collect all projectiles
-        self.all_projectiles.clear()
-        for enemy in self.enemies:
-            if enemy.alive:
-                self.all_projectiles.extend(enemy.projectiles)
 
         # Remove dead/off-screen enemies
         visible_top, visible_bottom = camera.get_visible_range(margin=300)

@@ -118,12 +118,13 @@ class ComboSystem:
         self.combo_timer = 0
 
     def _check_thresholds(self):
-        """Check combo thresholds for achievements."""
+        """Check combo thresholds for achievements. Returns list of newly unlocked."""
+        # This method is kept for internal state tracking (thresholds_hit),
+        # but actual achievement unlocking is handled by AchievementManager in game.py
         thresholds = {3: "ach_combo_3", 5: "ach_combo_5", 10: "ach_combo_10"}
         for threshold, ach_id in thresholds.items():
             if self.current_combo >= threshold and threshold not in self.thresholds_hit:
                 self.thresholds_hit.add(threshold)
-                save_manager.unlock_achievement(ach_id)
 
     def _get_combo_color(self):
         """Get color based on combo level."""

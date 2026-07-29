@@ -47,16 +47,23 @@ class Game:
         """Initialize the game."""
         pygame.init()
 
-        # Screen setup
-        self.screen_width, self.screen_height = save_manager.get_resolution()
+        # Virtual resolution (internal game logic)
+        self.virtual_w, self.virtual_h = save_manager.get_resolution()
+        self.screen_width = self.virtual_w
+        self.screen_height = self.virtual_h
+
+        # Window resolution (actual OS window)
+        self.window_w, self.window_h = self.virtual_w, self.virtual_h
+
         flags = pygame.RESIZABLE
         if save_manager.is_fullscreen():
             flags |= pygame.FULLSCREEN
 
-        self.screen = pygame.display.set_mode(
-            (self.screen_width, self.screen_height), flags
-        )
+        self.window = pygame.display.set_mode((self.window_w, self.window_h), flags)
         pygame.display.set_caption("botyarajump")
+
+        # Internal drawing surface (fixed size)
+        self.screen = pygame.Surface((self.virtual_w, self.virtual_h)).convert()
 
         self.clock = pygame.time.Clock()
         self.running = True
@@ -106,6 +113,9 @@ class Game:
         self._pause_keys = []
         self._update_pause_keys()
 
+        # Achievement check timer
+        self._last_ach_check = 0.0
+
         # Booster callback
         self.booster_manager.on_activate = self._on_booster_activate
 
@@ -128,17 +138,29 @@ class Game:
             if k is not None:
                 self._pause_keys.append(k)
 
-    def start_new_game(self):
-        """Start a new endless game."""
+    def start_new_game(self, mode_id="classic"):
+        """Start a new endless game with specified mode."""
+        self.current_mode = mode_id
         self.state = GameState.PLAYING
         self.ui.state = UIState.PLAYING
         self.score = 0
         self.coins_this_game = 0
         self.game_start_time = time.time()
         self.session_playtime = 0
+        self._last_ach_check = 0.0
         self.story_level = None
         self.story_level_data = None
         self.custom_level_data = None
+
+        # Reset mode parameters
+        self.lava_y = self.screen_height
+        self.time_left = 30.0
+        self.gravity_timer = 15.0
+        self.gravity_mode = "normal"
+        self.icicle_timer = 0.0
+
+        import settings
+        settings.GRAVITY = 0.5
 
         # Reset all systems
         self.camera.reset()
@@ -147,6 +169,16 @@ class Game:
             self.screen_height - 100
         )
         self.platform_manager.reset()
+
+        if mode_id == "hardcore":
+            self.platform_manager.spring_chance = 0
+            self.platform_manager.portal_chance = 0
+            self.platform_manager.moving_chance = 0.25
+        elif mode_id == "ice":
+            self.platform_manager.ice_chance = 1.0
+        elif mode_id == "boss":
+            self.enemy_manager.spawn_chance = 0.14
+
         self.enemy_manager.reset()
         self.powerup_manager.reset()
         self.coin_manager.reset()
@@ -165,7 +197,6 @@ class Game:
         level_path = os.path.join(STORY_LEVELS_DIR, f"level_{level_num}.json")
 
         if not os.path.exists(level_path):
-            # No level file - can't play
             return False
 
         try:
@@ -202,6 +233,7 @@ class Game:
         self.coins_this_game = 0
         self.game_start_time = time.time()
         self.session_playtime = 0
+        self._last_ach_check = 0.0
 
         self.camera.reset()
 
@@ -210,7 +242,6 @@ class Game:
         start_x = self.screen_width // 2 - 20
         start_y = self.screen_height - 100
 
-        # Look for start point in level data
         for pdata in level_data.get("platforms", []):
             if pdata.get("is_start", False):
                 start_x = pdata.get("x", 0) * grid_size
@@ -237,9 +268,7 @@ class Game:
         self.particles.reset()
         self.achievement_manager.reset_session()
 
-        # Story finish line
         self.story_finish_y = level_data.get("finish_y", 0) * grid_size
-
         save_manager.add_stat("total_games")
 
     def _on_booster_activate(self, booster_id):
@@ -281,20 +310,17 @@ class Game:
 
     def _on_enemy_killed(self, enemy):
         """Handle enemy death effects."""
-        # Particles
         self.particles.emit_enemy_death(
             enemy.x + enemy.width // 2,
             enemy.y + enemy.height // 2
         )
 
-        # Spawn coins
         self.coin_manager.spawn_from_enemy(
             enemy.x + enemy.width // 2,
             enemy.y + enemy.height // 2,
             count=max(1, enemy.score_value // 50)
         )
 
-        # Combo
         actual_score = self.combo.add_kill(
             enemy.x + enemy.width // 2,
             enemy.y,
@@ -302,11 +328,16 @@ class Game:
         )
         self.score += actual_score
 
-        # Stats
         save_manager.add_stat("total_kills")
         save_manager.add_nested_stat("enemies_killed_by_type", enemy.enemy_type)
         self.player.session_kills += 1
         self.achievement_manager.add_session_kill()
+
+        self.achievement_manager.check_all(self.score)
+        from daily_quests import quest_manager
+        quest_manager.on_kill(1)
+        if getattr(self, "current_mode", "classic") == "time_attack":
+            self.time_left = min(60.0, self.time_left + 3.5)
 
     def update(self, dt):
         """Update game logic."""
@@ -320,11 +351,9 @@ class Game:
             self.player.update(dt)
             self.achievement_manager.update(dt)
 
-        # Update level editor
         if self.ui.state == UIState.LEVEL_EDITOR and self._level_editor:
             self._level_editor.update(dt)
 
-        # FPS counter
         self._fps_timer += dt
         if self._fps_timer >= 0.5:
             self._fps_display = self.clock.get_fps()
@@ -332,62 +361,64 @@ class Game:
 
     def _update_gameplay(self, dt):
         """Update active gameplay."""
-        # Track playtime
         self.session_playtime += dt
         save_manager.add_stat("total_playtime_seconds", dt)
 
-        # Update player
         self.player.update(dt)
-
-        # Update camera
         self.camera.update(self.player.y, dt)
 
-        # Platform collision
         if self.player.alive and self.player.is_falling():
-            landed_platform = self.platform_manager.check_collision(self.player)
+            landed_platform = self.platform_manager.check_collision(self.player, dt)
             if landed_platform:
-                # Particles
+                from daily_quests import quest_manager
+                quest_manager.on_platform(landed_platform.platform_type)
+
                 self.particles.emit_jump(
                     self.player.x + self.player.width // 2,
                     self.player.y + self.player.height
                 )
 
-                # Track moving platform achievement
+                if getattr(self, "current_mode", "classic") == "time_attack":
+                    self.time_left = min(60.0, self.time_left + 0.3)
+
+                if landed_platform.platform_type == "portal":
+                    self.camera.shake(8, 0.35)
+                    self.particles.emit_super_jump(
+                        self.player.x + self.player.width // 2,
+                        self.player.y + self.player.height
+                    )
+                elif landed_platform.platform_type == "spring":
+                    self.camera.shake(4, 0.15)
+
                 if landed_platform.platform_type == "moving":
                     self.achievement_manager.flag("landed_moving")
 
-                # Platform break particles
                 if landed_platform.platform_type == "breakable":
                     self.particles.emit_platform_break(
                         landed_platform.x, landed_platform.y,
                         landed_platform.width
                     )
 
-        # Update platforms
         if self.state == GameState.PLAYING:
             self.platform_manager.update(dt, self.camera)
         else:
-            # Story mode - don't generate new platforms
             for p in self.platform_manager.platforms:
                 if p.alive:
                     p.update(dt)
 
-        # Update enemies
         self.enemy_manager.update(dt, self.player, self.camera)
 
-        # Enemy stomp
         if self.player.alive and self.player.is_falling():
             stomped = self.enemy_manager.check_stomp_collision(self.player)
             for enemy in stomped:
                 self._on_enemy_killed(enemy)
+                self.camera.shake(5, 0.2)
 
-        # Bullet hits
         if self.player.bullets:
             bullet_kills = self.enemy_manager.check_bullet_collision(self.player.bullets)
             for enemy in bullet_kills:
                 self._on_enemy_killed(enemy)
 
-        # Enemy damage to player
         if self.player.alive:
             took_damage = self.enemy_manager.check_damage_collision(self.player)
             if took_damage:
@@ -395,29 +426,18 @@ class Game:
                 if died:
                     self._on_player_death()
                 else:
-                    # Shield absorbed hit
                     self.particles.emit_shield_break(
                         self.player.x + self.player.width // 2,
                         self.player.y + self.player.height // 2
                     )
                     self.camera.shake(4, 0.2)
 
-        # Update powerups
         self.powerup_manager.update(dt, self.player, self.camera)
-
-        # Update coins
         self.coin_manager.update(dt, self.player, self.camera)
-
-        # Update boosters
         self.booster_manager.update(dt)
-
-        # Update combo
         self.combo.update(dt)
-
-        # Update particles
         self.particles.update(dt)
 
-        # Trail particles
         trail = save_manager.equipped.get("trail", "none")
         if trail != "none" and self.player.alive:
             self.particles.update_trail(
@@ -427,60 +447,106 @@ class Game:
                 trail
             )
 
-        # Update achievements
         self.achievement_manager.update(dt)
 
-        # Score from height
         height_score = self.camera.get_score_from_height()
         diff = save_manager.get_difficulty_settings()
         self.score = max(self.score, int(height_score * diff["score_mult"]))
 
-        # Coins tracking
+        new_coins = self.player.session_coins - self.coins_this_game
+        if new_coins > 0:
+            from daily_quests import quest_manager
+            quest_manager.on_coin(new_coins)
+            if getattr(self, "current_mode", "classic") == "time_attack":
+                self.time_left = min(60.0, self.time_left + new_coins * 1.2)
         self.coins_this_game = self.player.session_coins
 
-        # Check death by falling
+        from daily_quests import quest_manager
+        quest_manager.on_score(self.score)
+
+        # Mode mechanics updates
+        mode = getattr(self, "current_mode", "classic")
+
+        if mode == "lava":
+            height_climbed = max(0, self.screen_height - self.camera.y_offset)
+            spd = 0.8 + (height_climbed / 4500.0)
+            self.lava_y -= spd * dt * 60
+            if self.player.alive and self.player.y + self.player.height >= self.lava_y:
+                self.player.alive = False
+                self._on_player_death()
+
+        elif mode == "time_attack":
+            if self.player.alive:
+                self.time_left -= dt
+                if self.time_left <= 0:
+                    self.time_left = 0
+                    self.player.alive = False
+                    self._on_player_death()
+
+        elif mode == "gravity":
+            self.gravity_timer -= dt
+            if self.gravity_timer <= 0:
+                self.gravity_timer = 15.0
+                self.gravity_mode = random.choice(["normal", "low", "heavy", "hyper"])
+                import settings
+                if self.gravity_mode == "low":
+                    settings.GRAVITY = 0.25
+                elif self.gravity_mode == "heavy":
+                    settings.GRAVITY = 0.85
+                else:
+                    settings.GRAVITY = 0.5
+                self.camera.shake(4, 0.2)
+
+        elif mode == "ice" and self.player.alive:
+            self.icicle_timer += dt
+            if self.icicle_timer >= 2.2:
+                self.icicle_timer = 0
+                rx = random.randint(30, self.screen_width - 30)
+                from enemies import create_enemy, Enemy
+                hazard = create_enemy(Enemy.RED_BALL, rx, self.camera.y_offset - 40)
+                self.enemy_manager.enemies.append(hazard)
+
         if self.player.alive and self.camera.is_below_death_line(self.player.y):
             self.player.alive = False
             self._on_player_death()
 
-        # Story mode: check if reached finish
         if self.state == GameState.STORY_PLAYING and self.player.alive:
             if self.player.y <= self.story_finish_y:
                 self._on_story_level_complete()
 
-        # Periodic achievement check
-        if int(self.session_playtime) % 5 == 0 and self.session_playtime > 1:
+        if self.session_playtime - self._last_ach_check >= 5.0:
+            self._last_ach_check = self.session_playtime
             self.achievement_manager.check_all(self.score)
 
     def _on_player_death(self):
         """Handle player death."""
+        import settings
+        settings.GRAVITY = 0.5
+
         self.particles.emit_death(
             self.player.x + self.player.width // 2,
             self.player.y + self.player.height // 2
         )
         self.camera.shake(8, 0.4)
 
-        # Delay before showing game over
-        self.player.vy = -5  # Small bounce
+        self.player.vy = -5
 
-        # Save stats
+        mode = getattr(self, "current_mode", "classic")
+        save_manager.set_mode_high_score(mode, self.score)
+
         is_new_record = self.score > save_manager.high_score
         if is_new_record:
             save_manager.high_score = self.score
 
         save_manager.set_stat_max("max_height_reached", abs(int(self.camera.highest_y)))
         save_manager.set_stat_max("highest_combo", self.combo.max_combo_this_game)
-        save_manager.save()
 
-        # Calculate coins earned from score
         score_coins = self.score // 100
         total_coins = self.coins_this_game + score_coins
-        save_manager.earn_coins(score_coins)
+        save_manager.earn_coins(score_coins, persist=False)
 
-        # Final achievement check
         self.achievement_manager.check_all(self.score)
 
-        # Prepare game over data
         self.ui.game_over_data = {
             "score": self.score,
             "high_score": save_manager.high_score,
@@ -491,25 +557,23 @@ class Game:
         self.state = GameState.GAME_OVER
         self.ui.state = UIState.GAME_OVER
 
+        save_manager.save()
+
     def _on_story_level_complete(self):
         """Handle story level completion."""
-        # Calculate stars based on score
         star_scores = self.story_level_data.get("star_scores", [500, 1000, 2000])
         stars = 0
         for threshold in star_scores:
             if self.score >= threshold:
                 stars += 1
 
-        stars = max(1, stars)  # At least 1 star for completing
+        stars = max(1, stars)
 
         save_manager.complete_story_level(self.story_level, stars)
-
-        # Achievement checks
         self.achievement_manager.check_all(self.score)
 
-        # Coins from score
         score_coins = self.score // 50
-        save_manager.earn_coins(score_coins)
+        save_manager.earn_coins(score_coins, persist=False)
 
         self.ui.game_over_data = {
             "score": self.score,
@@ -523,26 +587,41 @@ class Game:
         self.state = GameState.GAME_OVER
         self.ui.state = UIState.STORY_COMPLETE
 
+        save_manager.save()
+
+    def _map_mouse_coords(self, pos):
+        """Translate window mouse coordinates to virtual screen coordinates."""
+        mx, my = pos
+        scale = min(self.window_w / self.virtual_w, self.window_h / self.virtual_h)
+        scaled_w = self.virtual_w * scale
+        scaled_h = self.virtual_h * scale
+        offset_x = (self.window_w - scaled_w) / 2
+        offset_y = (self.window_h - scaled_h) / 2
+
+        vx = (mx - offset_x) / scale
+        vy = (my - offset_y) / scale
+
+        vx = max(0, min(self.virtual_w, vx))
+        vy = max(0, min(self.virtual_h, vy))
+
+        return (int(vx), int(vy))
+
     def handle_event(self, event):
         """Handle a single event based on current state."""
-        # Global events
         if event.type == pygame.QUIT:
             self.running = False
             return
 
         if event.type == pygame.VIDEORESIZE:
-            self.screen_width = event.w
-            self.screen_height = event.h
-            self.screen = pygame.display.set_mode(
-                (self.screen_width, self.screen_height), pygame.RESIZABLE
-            )
-            self.camera.screen_width = self.screen_width
-            self.camera.screen_height = self.screen_height
-            self.ui.resize(self.screen_width, self.screen_height)
-            save_manager.set_resolution(self.screen_width, self.screen_height)
+            # Just update the OS window size, internal logic stays unchanged
+            self.window_w = max(1, event.w)
+            self.window_h = max(1, event.h)
+            flags = pygame.RESIZABLE
+            if save_manager.is_fullscreen():
+                flags |= pygame.FULLSCREEN
+            self.window = pygame.display.set_mode((self.window_w, self.window_h), flags)
             return
 
-        # Route to current UI state
         ui_state = self.ui.state
 
         if ui_state == UIState.LANGUAGE_SELECT:
@@ -589,6 +668,11 @@ class Game:
             if action == "back":
                 self.ui.state = UIState.MAIN_MENU
 
+        elif ui_state == UIState.DAILY_QUESTS:
+            action = self.ui.handle_daily_quests(event)
+            if action == "back":
+                self.ui.state = UIState.MAIN_MENU
+
         elif ui_state == UIState.STATISTICS:
             action = self.ui.handle_statistics(event)
             if action == "back":
@@ -622,19 +706,20 @@ class Game:
                     if level_data:
                         self.custom_level_data = level_data
                         self._load_level(level_data)
-                        # Use STORY_PLAYING so platforms don't generate infinitely
                         self.state = GameState.STORY_PLAYING
                         self.ui.state = UIState.STORY_PLAYING
-                        self.story_level = None  # Not a real story level
+                        self.story_level = None
 
     def _handle_menu_action(self, action):
         """Handle main menu button press."""
         if action == "play":
-            self.start_new_game()
+            self.ui.state = UIState.MODE_SELECT
         elif action == "story":
             self.ui.state = UIState.STORY_SELECT
         elif action == "shop":
             self.ui.state = UIState.SHOP
+        elif action == "quests":
+            self.ui.state = UIState.DAILY_QUESTS
         elif action == "achievements":
             self.achievement_manager.check_all(0)
             self.ui.state = UIState.ACHIEVEMENTS
@@ -654,17 +739,24 @@ class Game:
 
     def _handle_gameplay_event(self, event):
         """Handle events during gameplay."""
-        # Pause check
         if event.type == pygame.KEYDOWN:
             if event.key in self._pause_keys:
                 self.state = GameState.PAUSED
                 self.ui.state = UIState.PAUSED
                 return
 
-        # Player input
-        self.player.handle_event(event)
+        # Mirror mode control swap
+        if getattr(self, "current_mode", "classic") == "mirror" and event.type in (pygame.KEYDOWN, pygame.KEYUP):
+            ev_dict = event.__dict__.copy()
+            if event.key in self.player._left_keys and self.player._right_keys:
+                ev_dict["key"] = self.player._right_keys[0]
+            elif event.key in self.player._right_keys and self.player._left_keys:
+                ev_dict["key"] = self.player._left_keys[0]
+            swapped_event = pygame.event.Event(event.type, ev_dict)
+            self.player.handle_event(swapped_event)
+        else:
+            self.player.handle_event(event)
 
-        # Booster input
         self.booster_manager.handle_event(event)
 
     def _handle_pause_action(self, action):
@@ -676,7 +768,7 @@ class Game:
             if self.story_level:
                 self.start_story_level(self.story_level)
             else:
-                self.start_new_game()
+                self.start_new_game(getattr(self, "current_mode", "classic"))
         elif action == "menu":
             self.state = GameState.MENU
             self.ui.state = UIState.MAIN_MENU
@@ -687,7 +779,7 @@ class Game:
             if self.story_level:
                 self.start_story_level(self.story_level)
             else:
-                self.start_new_game()
+                self.start_new_game(getattr(self, "current_mode", "classic"))
         elif action == "menu":
             self.state = GameState.MENU
             self.ui.state = UIState.MAIN_MENU
@@ -701,16 +793,17 @@ class Game:
             self.ui.state = UIState.CONTROLS
         elif action == "toggle_fullscreen":
             fs = save_manager.is_fullscreen()
-            if fs:
-                self.screen = pygame.display.set_mode(
-                    (self.screen_width, self.screen_height),
-                    pygame.RESIZABLE | pygame.FULLSCREEN
-                )
+            save_manager.set_fullscreen(not fs)
+            new_fs = save_manager.is_fullscreen()
+            flags = pygame.RESIZABLE
+            if new_fs:
+                flags |= pygame.FULLSCREEN
+                info = pygame.display.Info()
+                self.window_w = info.current_w
+                self.window_h = info.current_h
             else:
-                self.screen = pygame.display.set_mode(
-                    (self.screen_width, self.screen_height),
-                    pygame.RESIZABLE
-                )
+                self.window_w, self.window_h = self.virtual_w, self.virtual_h
+            self.window = pygame.display.set_mode((self.window_w, self.window_h), flags)
 
     def _open_level_editor(self):
         """Open level editor (lazy import)."""
@@ -726,6 +819,7 @@ class Game:
         """Draw current frame."""
         ui_state = self.ui.state
 
+        # All drawing happens on the fixed virtual screen
         if ui_state == UIState.LANGUAGE_SELECT:
             self.ui.draw_language_select(self.screen)
 
@@ -756,6 +850,9 @@ class Game:
         elif ui_state == UIState.ACHIEVEMENTS:
             self.ui.draw_achievements(self.screen, self.achievement_manager)
 
+        elif ui_state == UIState.DAILY_QUESTS:
+            self.ui.draw_daily_quests(self.screen)
+
         elif ui_state == UIState.STATISTICS:
             self.ui.draw_statistics(self.screen)
 
@@ -769,21 +866,31 @@ class Game:
             if self._level_editor:
                 self._level_editor.draw(self.screen)
 
-        # Achievement notifications (on top of everything)
         self.achievement_manager.draw_notifications(self.screen, self.screen_width)
 
-        # FPS counter
         if save_manager.settings.get("show_fps", False):
             fps_font = font_manager.get_font(12)
             fps_text = f"FPS: {int(self._fps_display)}"
             fps_surf = fps_font.render(fps_text, True, (200, 200, 200))
             self.screen.blit(fps_surf, (self.screen_width - fps_surf.get_width() - 5, 2))
 
+        # Scale virtual screen to actual window size with letterboxing
+        self.window.fill((15, 15, 15))  # Dark grey borders
+
+        scale = min(self.window_w / self.virtual_w, self.window_h / self.virtual_h)
+        scaled_w = int(self.virtual_w * scale)
+        scaled_h = int(self.virtual_h * scale)
+
+        offset_x = (self.window_w - scaled_w) // 2
+        offset_y = (self.window_h - scaled_h) // 2
+
+        scaled_surface = pygame.transform.smoothscale(self.screen, (scaled_w, scaled_h))
+        self.window.blit(scaled_surface, (offset_x, offset_y))
+
         pygame.display.flip()
 
     def _draw_gameplay(self):
         """Draw the game world."""
-        # Background
         theme = save_manager.equipped.get("theme", "day")
         sprite_renderer.draw_background(
             self.screen, theme,
@@ -791,35 +898,66 @@ class Game:
             self.screen_width, self.screen_height
         )
 
-        # Platforms
         self.platform_manager.draw(self.screen, self.camera, sprite_renderer)
-
-        # Coins
         self.coin_manager.draw(self.screen, self.camera, sprite_renderer)
-
-        # Powerups
         self.powerup_manager.draw(self.screen, self.camera, sprite_renderer)
-
-        # Enemies
         self.enemy_manager.draw(self.screen, self.camera, sprite_renderer)
-
-        # Particles (behind player)
         self.particles.draw(self.screen, self.camera)
-
-        # Player
         self.player.draw(self.screen, self.camera, sprite_renderer)
 
-        # Combo popups
+        # Mode Visual Overlays
+        mode = getattr(self, "current_mode", "classic")
+        if mode == "lava":
+            lx, ly = self.camera.world_to_screen(0, self.lava_y)
+            if ly < self.screen_height + 50:
+                lava_h = max(20, self.screen_height + 100 - int(ly))
+                lava_surf = create_surface_with_alpha(self.screen_width, lava_h)
+                lava_surf.fill((230, 70, 20, 210))
+                pygame.draw.rect(lava_surf, (255, 200, 50, 255), (0, 0, self.screen_width, 6))
+                self.screen.blit(lava_surf, (0, int(ly)))
+
+        elif mode == "dark":
+            dark_overlay = create_surface_with_alpha(self.screen_width, self.screen_height)
+            dark_overlay.fill((12, 12, 22, 235))
+            px, py = self.camera.world_to_screen(
+                self.player.x + self.player.width // 2,
+                self.player.y + self.player.height // 2
+            )
+            pygame.draw.circle(dark_overlay, (0, 0, 0, 0), (int(px), int(py)), 115)
+            self.screen.blit(dark_overlay, (0, 0))
+
         self.combo.draw_popups(self.screen, self.camera, sprite_renderer)
 
-        # HUD
         self.ui.draw_hud(
             self.screen, self.score, self.coins_this_game,
-            save_manager.high_score,
+            save_manager.get_mode_high_score(mode),
             abs(int(self.camera.highest_y))
         )
 
-        # Combo HUD
+        # Mode HUD Banner
+        if mode == "time_attack":
+            t_font = font_manager.get_font(20)
+            color = (255, 60, 60) if self.time_left < 6 else (255, 215, 0)
+            t_surf = t_font.render(f"⏱️ {self.time_left:.1f}s", True, color)
+            self.screen.blit(t_surf, (self.screen_width // 2 - t_surf.get_width() // 2, 35))
+
+        elif mode == "gravity":
+            g_font = font_manager.get_font(13)
+            labels = {
+                "normal": "🌀 Normal Gravity",
+                "low": "🌕 Moon Gravity (Low)",
+                "heavy": "🏋️ Heavy Gravity",
+                "hyper": "⚡ Hyper Speed"
+            }
+            txt = labels.get(self.gravity_mode, "Gravity Chaos")
+            g_surf = g_font.render(txt, True, (210, 170, 255))
+            self.screen.blit(g_surf, (self.screen_width // 2 - g_surf.get_width() // 2, 38))
+
+        elif mode == "mirror":
+            m_font = font_manager.get_font(13)
+            m_surf = m_font.render("🪞 MIRROR CONTROLS", True, (140, 220, 255))
+            self.screen.blit(m_surf, (self.screen_width // 2 - m_surf.get_width() // 2, 38))
+
         self.combo.draw_hud(
             self.screen,
             self.screen_width // 2,
@@ -827,11 +965,9 @@ class Game:
             save_manager.get_hud_opacity()
         )
 
-        # Booster HUD
         if self.booster_manager.has_any_booster():
             self._draw_booster_hud()
 
-        # Story mode finish line
         if self.state == GameState.STORY_PLAYING and self.story_finish_y:
             self._draw_finish_line()
 
@@ -849,7 +985,6 @@ class Game:
             info = self.booster_manager.get_slot_info(i)
 
             if info["is_empty"]:
-                # Empty slot
                 empty_surf = create_surface_with_alpha(slot_size, slot_size)
                 pygame.draw.rect(empty_surf, (40, 40, 55, opacity // 2),
                                  (0, 0, slot_size, slot_size), border_radius=6)
@@ -863,14 +998,12 @@ class Game:
                     info["booster_id"], cd_pct
                 )
 
-                # Uses remaining
                 if info["uses"] > 0:
                     uses_font = font_manager.get_font(10)
                     uses_surf = uses_font.render(str(info["uses"]), True, (255, 255, 255))
                     uses_surf.set_alpha(opacity)
                     self.screen.blit(uses_surf, (x + slot_size - 12, y + 2))
 
-                # Key hint
                 controls = save_manager.get_controls()
                 key_name = controls.get(f"booster_{i + 1}", [""])[0]
                 if key_name:
@@ -881,7 +1014,6 @@ class Game:
                     key_surf.set_alpha(opacity)
                     self.screen.blit(key_surf, (x + 2, y + slot_size - 12))
 
-                # Flash effect
                 if info["is_flashing"]:
                     flash_surf = create_surface_with_alpha(slot_size, slot_size)
                     pygame.draw.rect(flash_surf, (255, 255, 255, 80),
@@ -894,12 +1026,10 @@ class Game:
         finish_screen_y = int(finish_screen_y)
 
         if -50 < finish_screen_y < self.screen_height + 50:
-            # Checkered line
             for x_pos in range(0, self.screen_width, 16):
                 color = (255, 255, 255) if (x_pos // 16) % 2 == 0 else (0, 0, 0)
                 pygame.draw.rect(self.screen, color, (x_pos, finish_screen_y, 16, 8))
 
-            # Label
             finish_font = font_manager.get_font(14)
             finish_text = "FINISH"
             finish_surf = finish_font.render(finish_text, True, (255, 255, 100))
@@ -911,14 +1041,21 @@ class Game:
         """Main game loop."""
         while self.running:
             dt = self.clock.tick(self.fps) / 1000.0
-            dt = min(dt, 0.05)  # Cap delta time
+            dt = min(dt, 0.05)
 
             for event in pygame.event.get():
+                if event.type == pygame.VIDEORESIZE:
+                    self.handle_event(event)
+                    continue
+
+                # Translate mouse coordinates to virtual space
+                if hasattr(event, 'pos'):
+                    event.pos = self._map_mouse_coords(event.pos)
+
                 self.handle_event(event)
 
             self.update(dt)
             self.draw()
 
-        # Save before exit
         save_manager.save()
         pygame.quit()

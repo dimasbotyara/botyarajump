@@ -99,6 +99,7 @@ class SpriteRenderer:
     def __init__(self):
         self._cache = {}
         self._animation_time = 0
+        self._bg_cache = {}  # Cache for background gradients
 
     def update(self, dt):
         """Update animation time."""
@@ -107,6 +108,7 @@ class SpriteRenderer:
     def clear_cache(self):
         """Clear sprite cache."""
         self._cache = {}
+        self._bg_cache.clear()
 
     # ==========================================
     # PLAYER SPRITE
@@ -114,7 +116,8 @@ class SpriteRenderer:
 
     def draw_player(self, surface, x, y, width, height, skin_id="default",
                     facing_right=True, velocity_y=0, is_shooting=False,
-                    has_shield=False, has_jetpack=False, has_blaster=False):
+                    has_shield=False, has_jetpack=False, has_blaster=False,
+                    scale_x=1.0, scale_y=1.0):
         """Draw the player character (doodler)."""
         colors = SKIN_COLORS.get(skin_id, SKIN_COLORS["default"])
 
@@ -140,15 +143,15 @@ class SpriteRenderer:
         cx = sprite_w // 2
         cy = sprite_h // 2
 
-        # Squash and stretch based on velocity
-        stretch_y = 1.0
-        stretch_x = 1.0
+        # Squash and stretch based on velocity and scale factor
+        stretch_y = scale_y
+        stretch_x = scale_x
         if velocity_y < -5:
-            stretch_y = 1.15
-            stretch_x = 0.85
+            stretch_y *= 1.15
+            stretch_x *= 0.85
         elif velocity_y > 5:
-            stretch_y = 0.85
-            stretch_x = 1.15
+            stretch_y *= 0.85
+            stretch_x *= 1.15
 
         body_w = int(width * 0.7 * stretch_x)
         body_h = int(height * 0.7 * stretch_y)
@@ -491,6 +494,68 @@ class SpriteRenderer:
         pygame.draw.rect(surface, dark,
                          (spring_x - cap_w // 2, y - spring_h - cap_h, cap_w, cap_h),
                          width=1, border_radius=2)
+
+    def draw_platform_ice(self, surface, x, y, width, height, theme="day"):
+        """Draw shiny blue ice platform."""
+        base_color = (130, 210, 255)
+        dark = (70, 150, 210)
+        highlight = (230, 250, 255)
+
+        pygame.draw.rect(surface, base_color, (x, y, width, height), border_radius=6)
+        pygame.draw.rect(surface, dark, (x, y, width, height), width=2, border_radius=6)
+        for offset in range(10, width - 10, 20):
+            pygame.draw.line(surface, highlight, (x + offset, y + 2), (x + offset - 6, y + height - 2), 2)
+
+    def draw_platform_sand(self, surface, x, y, width, height, theme="day", progress=0.0):
+        """Draw sand platform with crumble animation."""
+        base_color = (225, 190, 110)
+        dark = (160, 120, 60)
+        alpha = int(255 * (1 - progress))
+        if alpha <= 0:
+            return
+
+        sand_surf = create_surface_with_alpha(width + 4, height + 4)
+        pygame.draw.rect(sand_surf, (*base_color, alpha), (2, 2, width, height), border_radius=4)
+        pygame.draw.rect(sand_surf, (*dark, alpha), (2, 2, width, height), width=1, border_radius=4)
+        if progress > 0:
+            for i in range(int(progress * 12)):
+                dot_x = 2 + (i * 17) % width
+                dot_y = 2 + (i * 7) % height
+                pygame.draw.circle(sand_surf, (*dark, alpha), (dot_x, dot_y), 2)
+        surface.blit(sand_surf, (x - 2, y - 2))
+
+    def draw_platform_conveyor(self, surface, x, y, width, height, theme="day", direction=1):
+        """Draw animated conveyor belt platform."""
+        bg_color = (90, 95, 110)
+        belt_color = (170, 175, 190)
+        dark = (40, 45, 60)
+
+        pygame.draw.rect(surface, bg_color, (x, y, width, height), border_radius=5)
+        pygame.draw.rect(surface, dark, (x, y, width, height), width=2, border_radius=5)
+
+        pygame.draw.circle(surface, dark, (x + 6, y + height // 2), height // 2 - 1)
+        pygame.draw.circle(surface, dark, (x + width - 6, y + height // 2), height // 2 - 1)
+
+        offset = (self._animation_time * 40 * direction) % 15
+        for i in range(-15, width + 15, 15):
+            sx = x + i + offset
+            if x <= sx <= x + width - 4:
+                pygame.draw.line(surface, belt_color, (sx, y + 2), (sx + direction * 4, y + height - 2), 2)
+
+    def draw_platform_portal(self, surface, x, y, width, height, theme="day", pulse=0.0):
+        """Draw purple portal platform."""
+        base_color = (140, 60, 220)
+        dark = (70, 20, 130)
+        glow = (210, 140, 255)
+
+        pygame.draw.rect(surface, dark, (x - 1, y - 1, width + 2, height + 2), border_radius=7)
+        pygame.draw.rect(surface, base_color, (x, y, width, height), border_radius=6)
+
+        for i in range(3):
+            cx = x + width // 4 + i * (width // 4)
+            cy = y + height // 2
+            r = max(2, int(4 + math.sin(pulse * 2 + i) * 2))
+            pygame.draw.circle(surface, glow, (cx, cy), r)
 
     def draw_platform_breaking_pieces(self, surface, x, y, width, height,
                                       progress, theme="day"):
@@ -1135,16 +1200,23 @@ class SpriteRenderer:
     def draw_background(self, surface, theme="day", camera_y=0, width=480, height=800):
         """Draw themed background with gradient and decorations."""
         colors = THEME_COLORS.get(theme, THEME_COLORS["day"])
-        top = colors["bg_top"]
-        bottom = colors["bg_bottom"]
 
-        # Gradient
-        for y_pos in range(height):
-            t = y_pos / height
-            r = int(top[0] + (bottom[0] - top[0]) * t)
-            g = int(top[1] + (bottom[1] - top[1]) * t)
-            b = int(top[2] + (bottom[2] - top[2]) * t)
-            pygame.draw.line(surface, (r, g, b), (0, y_pos), (width, y_pos))
+        # OPTIMIZATION: Cache the gradient background
+        key = (theme, width, height)
+        if key not in self._bg_cache:
+            top = colors["bg_top"]
+            bottom = colors["bg_bottom"]
+            bg_surf = pygame.Surface((width, height))
+            # Gradient
+            for y_pos in range(height):
+                t = y_pos / height
+                r = int(top[0] + (bottom[0] - top[0]) * t)
+                g = int(top[1] + (bottom[1] - top[1]) * t)
+                b = int(top[2] + (bottom[2] - top[2]) * t)
+                pygame.draw.line(bg_surf, (r, g, b), (0, y_pos), (width, y_pos))
+            self._bg_cache[key] = bg_surf.convert()
+
+        surface.blit(self._bg_cache[key], (0, 0))
 
         # Stars for night/space themes
         if colors.get("stars", False):

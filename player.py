@@ -101,6 +101,16 @@ class Player:
         # Bullets
         self.bullets = []
 
+        # Squash & Stretch scaling
+        self.scale_x = 1.0
+        self.scale_y = 1.0
+
+        # Ice platform friction timer
+        self.on_ice_timer = 0.0
+
+        # Double jump state (e.g. for Ninja skin)
+        self.has_double_jumped = False
+
         # Input state
         self._move_left = False
         self._move_right = False
@@ -114,6 +124,16 @@ class Player:
 
         # Controls cache
         self._update_controls()
+        self.apply_skin_passives()
+
+    def apply_skin_passives(self):
+        """Apply passive abilities based on current equipped skin."""
+        skin_id = save_manager.equipped.get("skin", "default")
+        if skin_id == "ghost":
+            self.has_shield = True
+            self.shield_hits = 1
+        elif skin_id == "robot":
+            self.blaster_fire_rate = 0.12
 
     def _update_controls(self):
         """Cache control key bindings."""
@@ -202,20 +222,26 @@ class Player:
                 self._shoot_pressed = False
 
     def _try_shoot(self):
-        """Attempt to fire a bullet."""
+        """Attempt to fire a bullet or execute Ninja double jump."""
+        skin_id = save_manager.equipped.get("skin", "default")
+        if skin_id == "ninja" and not self.on_platform and not self.has_double_jumped and self.vy > -4:
+            self.jump()
+            self.has_double_jumped = True
+            return
+
         if self.has_blaster and self.blaster_fire_timer <= 0:
             self._fire_bullet()
             self.blaster_fire_timer = self.blaster_fire_rate
         elif not self.has_blaster:
-            # Normal single shot (upward)
             self._fire_bullet()
 
     def _fire_bullet(self):
         """Fire a bullet upward."""
         bullet_x = self.x + self.width // 2
         bullet_y = self.y
-        # Shoot upward
-        bullet = Bullet(bullet_x, bullet_y, 0, -1, speed=12)
+        skin_id = save_manager.equipped.get("skin", "default")
+        bullet_speed = 16 if skin_id == "robot" else 12
+        bullet = Bullet(bullet_x, bullet_y, 0, -1, speed=bullet_speed)
         self.bullets.append(bullet)
         self.is_shooting = True
         self._shoot_timer = 0.15
@@ -223,75 +249,81 @@ class Player:
     def update(self, dt):
         """Update player physics and state."""
         if not self.alive:
-            # Fall off screen
             self.vy += GRAVITY * dt * 60
             self.y += self.vy * dt * 60
             return
 
-        # Horizontal movement
+        # Ice timer decay
+        if self.on_ice_timer > 0:
+            self.on_ice_timer -= dt
+
+        # Smooth scale lerp back to 1.0 (Squash & Stretch)
+        self.scale_x += (1.0 - self.scale_x) * 0.15
+        self.scale_y += (1.0 - self.scale_y) * 0.15
+
+        # Horizontal movement speed (Neon skin bonus)
+        skin_id = save_manager.equipped.get("skin", "default")
+        base_speed = PLAYER_SPEED * (1.25 if skin_id == "neon" else 1.0)
+
         target_vx = 0
         if self._move_left:
-            target_vx -= PLAYER_SPEED
+            target_vx -= base_speed
             self.facing_right = False
         if self._move_right:
-            target_vx += PLAYER_SPEED
+            target_vx += base_speed
             self.facing_right = True
 
-        # Smooth horizontal acceleration
-        accel = 0.3
-        if target_vx != 0:
-            self.vx += (target_vx - self.vx) * accel
+        # Friction / acceleration logic
+        if self.on_ice_timer > 0 and skin_id != "blue":
+            accel = 0.08  # Ice slip
+            if target_vx != 0:
+                self.vx += (target_vx - self.vx) * accel
+            else:
+                self.vx *= 0.97
         else:
-            self.vx *= 0.8
-            if abs(self.vx) < 0.1:
-                self.vx = 0
+            accel = 0.3
+            if target_vx != 0:
+                self.vx += (target_vx - self.vx) * accel
+            else:
+                self.vx *= 0.8
+                if abs(self.vx) < 0.1:
+                    self.vx = 0
 
         # Jetpack
         if self.has_jetpack:
             self.jetpack_timer -= dt
-            self.vy = -8  # Strong upward velocity
+            self.vy = -8
             if self.jetpack_timer <= 0:
                 self.has_jetpack = False
 
-        # Normal gravity
+        # Gravity
         if not self.has_jetpack:
-            gravity_mult = 1.0
-            if self.slowmo_active:
-                gravity_mult = 0.4
-
+            gravity_mult = 0.4 if self.slowmo_active else 1.0
             self.vy += GRAVITY * dt * 60 * gravity_mult
             self.vy = min(self.vy, PLAYER_MAX_FALL_SPEED)
 
-        # Apply velocity
         speed_mult = 0.4 if self.slowmo_active else 1.0
         self.x += self.vx * dt * 60 * speed_mult
         self.y += self.vy * dt * 60 * speed_mult
 
-        # Screen wrapping
         if self.x + self.width < 0:
             self.x = self.screen_width
         elif self.x > self.screen_width:
             self.x = -self.width
 
-        # Update powerup timers
         self._update_powerups(dt)
-
-        # Update bullets
         self._update_bullets(dt)
 
-        # Update shoot animation timer
         if self.is_shooting:
             self._shoot_timer -= dt
             if self._shoot_timer <= 0:
                 self.is_shooting = False
 
-        # Invincibility
         if self.invincible:
             self.invincible_timer -= dt
             if self.invincible_timer <= 0:
                 self.invincible = False
 
-        # Auto-fire with blaster
         if self.has_blaster and self._shoot_pressed:
             self.blaster_fire_timer -= dt
             if self.blaster_fire_timer <= 0:
@@ -333,15 +365,33 @@ class Player:
         """Make the player jump."""
         if velocity is None:
             velocity = PLAYER_JUMP_VELOCITY
+            skin_id = save_manager.equipped.get("skin", "default")
+            if skin_id == "rainbow":
+                velocity *= 1.15
+
         self.vy = velocity
         self.jump_count += 1
+        self.has_double_jumped = False
+        self.scale_x = 0.75
+        self.scale_y = 1.35
         save_manager.add_stat("total_jumps")
 
     def super_jump(self):
         """Spring/super jump."""
         self.vy = PLAYER_JUMP_VELOCITY * 1.8
         self.jump_count += 1
+        self.scale_x = 0.65
+        self.scale_y = 1.45
         save_manager.add_stat("total_jumps")
+
+    def apply_portal(self):
+        """Portal platform super warp jump."""
+        self.vy = PLAYER_JUMP_VELOCITY * 2.2
+        self.jump_count += 1
+        self.scale_x = 0.55
+        self.scale_y = 1.6
+        self.session_powerups_used.add("portal")
+        save_manager.add_nested_stat("powerups_used", "portal")
 
     def apply_jetpack(self):
         """Activate jetpack powerup."""
@@ -474,7 +524,9 @@ class Player:
             is_shooting=self.is_shooting,
             has_shield=self.has_shield or self.shield_booster_active,
             has_jetpack=self.has_jetpack,
-            has_blaster=self.has_blaster
+            has_blaster=self.has_blaster,
+            scale_x=self.scale_x,
+            scale_y=self.scale_y
         )
 
         # Draw wrapping ghost (if near edge)
@@ -489,7 +541,9 @@ class Player:
                 is_shooting=self.is_shooting,
                 has_shield=self.has_shield or self.shield_booster_active,
                 has_jetpack=self.has_jetpack,
-                has_blaster=self.has_blaster
+                has_blaster=self.has_blaster,
+                scale_x=self.scale_x,
+                scale_y=self.scale_y
             )
         elif self.x + self.width > self.screen_width:
             renderer.draw_player(
@@ -502,7 +556,9 @@ class Player:
                 is_shooting=self.is_shooting,
                 has_shield=self.has_shield or self.shield_booster_active,
                 has_jetpack=self.has_jetpack,
-                has_blaster=self.has_blaster
+                has_blaster=self.has_blaster,
+                scale_x=self.scale_x,
+                scale_y=self.scale_y
             )
 
         # Draw bullets

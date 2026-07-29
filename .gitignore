@@ -20,3 +20,5 @@ Thumbs.db
 
 # Настройки PyCharm / IntelliJ IDEA
 .idea/
+
+result.txt

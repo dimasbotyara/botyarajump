@@ -28,6 +28,10 @@ class EditorTool:
     PLATFORM_BREAKABLE = "platform_breakable"
     PLATFORM_DISAPPEARING = "platform_disappearing"
     PLATFORM_SPRING = "platform_spring"
+    PLATFORM_ICE = "platform_ice"
+    PLATFORM_SAND = "platform_sand"
+    PLATFORM_CONVEYOR = "platform_conveyor"
+    PLATFORM_PORTAL = "platform_portal"
     ENEMY_SLUG = "enemy_slug"
     ENEMY_BAT = "enemy_bat"
     ENEMY_BLACK_HOLE = "enemy_black_hole"
@@ -54,6 +58,10 @@ TOOL_CATEGORIES = [
         (EditorTool.PLATFORM_BREAKABLE, "Break", (160, 100, 60)),
         (EditorTool.PLATFORM_DISAPPEARING, "Vanish", (200, 200, 200)),
         (EditorTool.PLATFORM_SPRING, "Spring", (220, 200, 50)),
+        (EditorTool.PLATFORM_ICE, "Ice", (130, 210, 255)),
+        (EditorTool.PLATFORM_SAND, "Sand", (225, 190, 110)),
+        (EditorTool.PLATFORM_CONVEYOR, "Belt", (170, 175, 190)),
+        (EditorTool.PLATFORM_PORTAL, "Portal", (140, 60, 220)),
     ]),
     ("Enemies", [
         (EditorTool.ENEMY_SLUG, "Slug", (120, 180, 50)),

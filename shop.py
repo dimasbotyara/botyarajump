@@ -360,11 +360,11 @@ class Shop:
 
             name_font = font_manager.get_font(16)
             name_surf = name_font.render(name, True, (255, 255, 255))
-            surface.blit(name_surf, (75, item_y + 12))
+            surface.blit(name_surf, (75, item_y + 8))
 
             # Price or status
             price = item_data.get("price", 0)
-            price_font = font_manager.get_font(13)
+            price_font = font_manager.get_font(12)
 
             if is_owned:
                 if is_equipped:
@@ -379,7 +379,25 @@ class Shop:
                 status_color = (255, 215, 0) if can_afford else (255, 80, 80)
 
             status_surf = price_font.render(status_text, True, status_color)
-            surface.blit(status_surf, (75, item_y + 35))
+            surface.blit(status_surf, (75, item_y + 28))
+
+            # Skin ability description
+            if self.active_tab == ShopTab.SKINS:
+                skin_desc = {
+                    "default": "Классический прыгун",
+                    "red": "Огненный шлейф",
+                    "blue": "Устойчивость ко льду",
+                    "gold": "+25% Монет и Магнит",
+                    "neon": "+25% Скорость бега",
+                    "pixel": "+30% Шанс спавна монет",
+                    "ghost": "Щит от 1 смертельного удара",
+                    "rainbow": "+15% Высота прыжка",
+                    "ninja": "Двойной прыжок в воздухе",
+                    "robot": "Скорострельный лазер"
+                }.get(item_id, "")
+                desc_font = font_manager.get_font(11)
+                desc_surf = desc_font.render(skin_desc, True, (160, 210, 255))
+                surface.blit(desc_surf, (75, item_y + 46))
 
             # Buy/Equip button
             btn_w = 90

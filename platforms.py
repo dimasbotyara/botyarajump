@@ -19,6 +19,10 @@ class Platform:
     BREAKABLE = "breakable"
     DISAPPEARING = "disappearing"
     SPRING = "spring"
+    ICE = "ice"
+    SAND = "sand"
+    CONVEYOR = "conveyor"
+    PORTAL = "portal"
 
     def __init__(self, x, y, width=None, height=None, platform_type=None):
         self.x = x
@@ -230,13 +234,98 @@ class SpringPlatform(Platform):
 
         self.spring_compressed = True
         self.spring_timer = 0
-        player.apply_spring()
-        return None
+        return "spring"
 
     def _draw_specific(self, surface, x, y, renderer, theme):
         renderer.draw_platform_spring(
             surface, x, y, self.width, self.height, theme, self.spring_compressed
         )
+
+
+class IcePlatform(Platform):
+    """Ice platform - low friction, slippery movement."""
+
+    def __init__(self, x, y, width=None, height=None):
+        super().__init__(x, y, width, height, Platform.ICE)
+
+    def on_land(self, player):
+        if not self.active:
+            return None
+        super().on_land(player)
+        player.on_ice_timer = 0.5  # Apply ice friction briefly after landing
+        return player.jump()
+
+    def _draw_specific(self, surface, x, y, renderer, theme):
+        renderer.draw_platform_ice(surface, x, y, self.width, self.height, theme)
+
+
+class SandPlatform(Platform):
+    """Crumbling sand platform - collapses quickly after landing."""
+
+    def __init__(self, x, y, width=None, height=None):
+        super().__init__(x, y, width, height, Platform.SAND)
+        self.crumbling = False
+        self.crumble_timer = 0
+        self.crumble_duration = 0.35
+
+    def update(self, dt):
+        if self.crumbling:
+            self.crumble_timer += dt
+            if self.crumble_timer >= self.crumble_duration:
+                self.alive = False
+                self.active = False
+
+    def on_land(self, player):
+        if not self.active:
+            return None
+        super().on_land(player)
+        if not self.crumbling:
+            self.crumbling = True
+            player.jump()
+        return None
+
+    def _draw_specific(self, surface, x, y, renderer, theme):
+        progress = clamp(self.crumble_timer / self.crumble_duration, 0, 1) if self.crumbling else 0
+        renderer.draw_platform_sand(surface, x, y, self.width, self.height, theme, progress)
+
+
+class ConveyorPlatform(Platform):
+    """Conveyor belt platform - pushes player left or right."""
+
+    def __init__(self, x, y, width=None, height=None, direction=1):
+        super().__init__(x, y, width, height, Platform.CONVEYOR)
+        self.direction = direction  # 1 for right, -1 for left
+        self.speed = 3.5
+
+    def on_land(self, player):
+        if not self.active:
+            return None
+        super().on_land(player)
+        player.vx += self.direction * self.speed
+        return player.jump()
+
+    def _draw_specific(self, surface, x, y, renderer, theme):
+        renderer.draw_platform_conveyor(surface, x, y, self.width, self.height, theme, self.direction)
+
+
+class PortalPlatform(Platform):
+    """Portal platform - teleports player high up with portal effect."""
+
+    def __init__(self, x, y, width=None, height=None):
+        super().__init__(x, y, width, height, Platform.PORTAL)
+        self.pulse = 0
+
+    def update(self, dt):
+        self.pulse += dt * 3
+
+    def on_land(self, player):
+        if not self.active:
+            return None
+        super().on_land(player)
+        return "portal"
+
+    def _draw_specific(self, surface, x, y, renderer, theme):
+        renderer.draw_platform_portal(surface, x, y, self.width, self.height, theme, self.pulse)
 
 
 class PlatformManager:
@@ -249,11 +338,9 @@ class PlatformManager:
         self.highest_platform_y = screen_height
 
         # Player physics constraints for reachability
-        # Max jump height ≈ v² / (2 * g) where v=12, g=0.5 → ~144 pixels
-        # With horizontal speed 6 → max horizontal reach ~120 pixels
-        self.max_jump_height = 120  # Conservative estimate (less than physics max)
-        self.max_horizontal_reach = 160  # Max horizontal distance player can cover in one jump
-        self.min_vertical_gap = 35  # Minimum gap so platforms don't overlap
+        self.max_jump_height = 120
+        self.max_horizontal_reach = 160
+        self.min_vertical_gap = 35
 
         # Track last placed platform for reachability
         self._last_platform_x = screen_width // 2
@@ -265,11 +352,94 @@ class PlatformManager:
     def _update_difficulty(self):
         """Update generation parameters from difficulty settings."""
         diff = save_manager.get_difficulty_settings()
-        self.breakable_chance = diff["breakable_chance"]
-        self.disappearing_chance = diff["disappearing_chance"]
-        self.moving_chance = diff["moving_chance"]
-        self.spring_chance = diff["spring_chance"]
-        self.platform_gap_mult = diff["platform_gap_mult"]
+        self.breakable_chance = diff.get("breakable_chance", 0.12)
+        self.disappearing_chance = diff.get("disappearing_chance", 0.06)
+        self.moving_chance = diff.get("moving_chance", 0.15)
+        self.spring_chance = diff.get("spring_chance", 0.06)
+        self.ice_chance = diff.get("ice_chance", 0.08)
+        self.sand_chance = diff.get("sand_chance", 0.07)
+        self.conveyor_chance = diff.get("conveyor_chance", 0.08)
+        self.portal_chance = diff.get("portal_chance", 0.03)
+        self.platform_gap_mult = diff.get("platform_gap_mult", 1.0)
+
+    def _last_was_unreliable(self):
+        """Check if the last placed platform was breakable/disappearing/sand."""
+        if not self.platforms:
+            return False
+        last = self.platforms[-1]
+        return isinstance(last, (BreakablePlatform, DisappearingPlatform, SandPlatform))
+
+    def _choose_platform_type(self, x, y):
+        """Choose a random platform type based on difficulty settings."""
+        roll = random.random()
+        cumulative = 0
+
+        cumulative += self.spring_chance
+        if roll < cumulative:
+            return SpringPlatform(x, y)
+
+        cumulative += self.portal_chance
+        if roll < cumulative:
+            return PortalPlatform(x, y)
+
+        cumulative += self.moving_chance
+        if roll < cumulative:
+            max_range = min(150, x * 2, (self.screen_width - x - PLATFORM_WIDTH) * 2)
+            move_range = max(40, min(max_range, random.randint(60, 150)))
+            return MovingPlatform(x, y, move_range=move_range,
+                                  speed=random.uniform(1.5, 3.0),
+                                  screen_width=self.screen_width)
+
+        cumulative += self.conveyor_chance
+        if roll < cumulative:
+            direction = 1 if random.random() < 0.5 else -1
+            return ConveyorPlatform(x, y, direction=direction)
+
+        cumulative += self.ice_chance
+        if roll < cumulative:
+            return IcePlatform(x, y)
+
+        cumulative += self.sand_chance
+        if roll < cumulative:
+            return SandPlatform(x, y)
+
+        cumulative += self.breakable_chance
+        if roll < cumulative:
+            return BreakablePlatform(x, y)
+
+        cumulative += self.disappearing_chance
+        if roll < cumulative:
+            fade_time = random.uniform(1.5, 3.0)
+            return DisappearingPlatform(x, y, fade_time=fade_time)
+
+        return NormalPlatform(x, y)
+
+    def _create_platform_of_type(self, x, y, platform_type):
+        """Create a specific type of platform."""
+        if platform_type == Platform.NORMAL:
+            return NormalPlatform(x, y)
+        elif platform_type == Platform.MOVING:
+            max_range = min(150, x * 2, (self.screen_width - x - PLATFORM_WIDTH) * 2)
+            move_range = max(40, min(max_range, random.randint(60, 150)))
+            return MovingPlatform(x, y, move_range=move_range,
+                                  speed=random.uniform(1.5, 3.0),
+                                  screen_width=self.screen_width)
+        elif platform_type == Platform.BREAKABLE:
+            return BreakablePlatform(x, y)
+        elif platform_type == Platform.DISAPPEARING:
+            return DisappearingPlatform(x, y, fade_time=random.uniform(1.5, 3.0))
+        elif platform_type == Platform.SPRING:
+            return SpringPlatform(x, y)
+        elif platform_type == Platform.ICE:
+            return IcePlatform(x, y)
+        elif platform_type == Platform.SAND:
+            return SandPlatform(x, y)
+        elif platform_type == Platform.CONVEYOR:
+            return ConveyorPlatform(x, y, direction=1 if random.random() < 0.5 else -1)
+        elif platform_type == Platform.PORTAL:
+            return PortalPlatform(x, y)
+        else:
+            return NormalPlatform(x, y)
 
     def reset(self):
         """Reset for new game."""
@@ -324,52 +494,31 @@ class PlatformManager:
         return max(self.min_vertical_gap, gap)
 
     def _get_reachable_x_range(self, from_x, from_y, to_y):
-        """Calculate the X range that is reachable from a given platform.
-
-        Args:
-            from_x: X position of the source platform
-            from_y: Y position of the source platform
-            to_y: Y position of the target platform
-
-        Returns:
-            (min_x, max_x) tuple of valid X positions
-        """
+        """Calculate the X range that is reachable from a given platform."""
         vertical_dist = abs(from_y - to_y)
 
-        # The further up we need to jump, the less horizontal distance we can cover
-        # Rough approximation based on parabolic trajectory
         if vertical_dist <= 0:
             horizontal_range = self.max_horizontal_reach
         else:
-            # As vertical distance increases, horizontal reach decreases
             height_ratio = vertical_dist / self.max_jump_height
-            height_ratio = min(height_ratio, 0.95)  # Don't let it go to 0
+            height_ratio = min(height_ratio, 0.95)
             horizontal_range = self.max_horizontal_reach * (1 - height_ratio * 0.5)
 
         horizontal_range = max(PLATFORM_WIDTH * 2, horizontal_range)
 
-        # Calculate range centered on source platform center
         from_center = from_x + PLATFORM_WIDTH // 2
 
         min_x = from_center - horizontal_range - PLATFORM_WIDTH // 2
         max_x = from_center + horizontal_range - PLATFORM_WIDTH // 2
 
-        # Account for screen wrapping!
-        # Player can wrap around screen, so positions near edges are always reachable
-        # But let's keep platforms on screen for clarity
         min_x = max(5, min_x)
         max_x = min(self.screen_width - PLATFORM_WIDTH - 5, max_x)
 
-        # If wrapping makes the other side reachable too
-        # (player near left edge can reach right side by wrapping)
         if from_center < horizontal_range:
-            # Can wrap from left, so right side is also reachable
             max_x = self.screen_width - PLATFORM_WIDTH - 5
         if from_center > self.screen_width - horizontal_range:
-            # Can wrap from right, so left side is also reachable
             min_x = 5
 
-        # Safety: ensure valid range
         if min_x >= max_x:
             min_x = max(5, from_center - PLATFORM_WIDTH * 3)
             max_x = min(self.screen_width - PLATFORM_WIDTH - 5,
@@ -389,60 +538,41 @@ class PlatformManager:
 
         x = random.randint(min_x, max_x)
 
-        # Determine type
         if force_type:
             return self._create_platform_of_type(x, y, force_type)
 
         platform = self._choose_platform_type(x, y)
 
-        # SAFETY: If this is an unreliable platform, spawn a safe neighbor
         if isinstance(platform, (BreakablePlatform, DisappearingPlatform)):
-            # Don't place two unreliable platforms in a row
             if self._last_was_unreliable():
                 platform = NormalPlatform(x, y)
             else:
-                # Spawn a backup safe platform nearby
                 self._ensure_safe_neighbor(platform)
 
         return platform
 
     def _ensure_safe_neighbor(self, unsafe_platform):
-        """Place a safe normal platform near an unsafe one,
-        so the player always has an alternative path.
-
-        The safe platform is placed at a similar height but
-        different X position, ensuring both are reachable
-        from the platform below.
-        """
-        # Find a valid X position that's different from the unsafe platform
-        # but still reachable from the last safe platform
+        """Place a safe normal platform near an unsafe one."""
         min_x, max_x = self._get_reachable_x_range(
             self._last_platform_x, self._last_platform_y, unsafe_platform.y
         )
 
-        # Try to place on the opposite side of the screen from the unsafe platform
         unsafe_center = unsafe_platform.x + PLATFORM_WIDTH // 2
         screen_center = self.screen_width // 2
 
         if unsafe_center < screen_center:
-            # Unsafe is on left, try to place safe on right
             preferred_x = min(max_x, unsafe_platform.x + PLATFORM_WIDTH + 40)
         else:
-            # Unsafe is on right, try to place safe on left
             preferred_x = max(min_x, unsafe_platform.x - PLATFORM_WIDTH - 40)
 
-        # Clamp to valid range
         safe_x = max(min_x, min(max_x, preferred_x))
 
-        # Make sure it's not overlapping with the unsafe platform
         if abs(safe_x - unsafe_platform.x) < PLATFORM_WIDTH + 10:
-            # Try the other side
             if safe_x <= unsafe_platform.x:
                 safe_x = min(max_x, unsafe_platform.x + PLATFORM_WIDTH + 30)
             else:
                 safe_x = max(min_x, unsafe_platform.x - PLATFORM_WIDTH - 30)
 
-        # Small vertical offset so they're not at exact same height
         y_offset = random.randint(-15, 15)
         safe_y = unsafe_platform.y + y_offset
 
@@ -467,7 +597,6 @@ class PlatformManager:
 
         cumulative += self.moving_chance
         if roll < cumulative:
-            # Moving platform: make sure move range doesn't go off screen
             max_range = min(150, x * 2, (self.screen_width - x - PLATFORM_WIDTH) * 2)
             move_range = max(40, min(max_range, random.randint(60, 150)))
             return MovingPlatform(x, y, move_range=move_range,
@@ -483,7 +612,6 @@ class PlatformManager:
             fade_time = random.uniform(1.5, 3.0)
             return DisappearingPlatform(x, y, fade_time=fade_time)
 
-        # Default: normal platform
         return NormalPlatform(x, y)
 
     def _create_platform_of_type(self, x, y, platform_type):
@@ -506,12 +634,11 @@ class PlatformManager:
             return NormalPlatform(x, y)
 
     def _create_random_platform(self, y, force_type=None):
-        """Create a random platform at given y position. (Legacy, now uses reachable)"""
+        """Create a random platform at given y position."""
         return self._create_reachable_platform(y, force_type)
 
     def update(self, dt, camera):
         """Update all platforms and generate new ones."""
-        # Update existing platforms
         for platform in self.platforms:
             if platform.alive:
                 platform.update(dt)
@@ -530,13 +657,11 @@ class PlatformManager:
             new_platform = self._create_reachable_platform(new_y)
             self.platforms.append(new_platform)
 
-            # Update tracking
             self._last_platform_x = new_platform.x
             self._last_platform_y = new_platform.y
             self.highest_platform_y = new_y
 
-            # SAFETY: Every 5th platform, force a normal wide platform
-            # to give player a "rest point"
+            # SAFETY: Every 8th platform, force a normal wide platform
             platform_count = len([p for p in self.platforms if p.alive])
             if platform_count % 8 == 0:
                 safety_gap = self.min_vertical_gap + 10
@@ -551,7 +676,7 @@ class PlatformManager:
                 self._last_platform_y = safety_y
                 self.highest_platform_y = safety_y
 
-    def check_collision(self, player):
+    def check_collision(self, player, dt):
         """Check if player is landing on any platform.
         Only triggers when player is falling (vy > 0).
         """
@@ -559,7 +684,8 @@ class PlatformManager:
             return None
 
         feet_rect = player.get_feet_rect()
-        prev_bottom = feet_rect.bottom - player.vy  # Approximate previous position
+        # Fixed: properly calculate previous bottom using dt
+        prev_bottom = feet_rect.bottom - player.vy * dt * 60
 
         for platform in self.platforms:
             if not platform.alive or not platform.active:
@@ -575,7 +701,17 @@ class PlatformManager:
                     # Land on platform
                     player.y = plat_rect.top - player.height
                     player.on_platform = True
-                    platform.on_land(player)
+
+                    # Get jump velocity or special command
+                    action = platform.on_land(player)
+
+                    if action == "spring":
+                        player.apply_spring()
+                    elif action == "portal":
+                        player.apply_portal()
+                    elif action is not None:
+                        player.jump(action) # action is velocity
+
                     return platform
 
         return None
@@ -616,6 +752,14 @@ class PlatformManager:
                 p = DisappearingPlatform(x, y, width=width, fade_time=fade_time)
             elif ptype == "spring":
                 p = SpringPlatform(x, y, width=width)
+            elif ptype == "ice":
+                p = IcePlatform(x, y, width=width)
+            elif ptype == "sand":
+                p = SandPlatform(x, y, width=width)
+            elif ptype == "conveyor":
+                p = ConveyorPlatform(x, y, width=width)
+            elif ptype == "portal":
+                p = PortalPlatform(x, y, width=width)
             else:
                 p = NormalPlatform(x, y, width=width)
 

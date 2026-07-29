@@ -35,6 +35,8 @@ class UIState:
     STORY_COMPLETE = "story_complete"
     LEVEL_EDITOR = "level_editor"
     CUSTOM_LEVELS = "custom_levels"
+    DAILY_QUESTS = "daily_quests"
+    MODE_SELECT = "mode_select"
 
 
 class Button:
@@ -84,6 +86,7 @@ class UI:
 
         # Stats scroll
         self.stats_scroll = 0
+        self.mode_scroll = 0
 
         # Custom levels list
         self.custom_level_files = []
@@ -200,10 +203,10 @@ class UI:
 
         # Menu buttons
         btn_w = 220
-        btn_h = 42
+        btn_h = 38
         btn_x = self.screen_width // 2 - btn_w // 2
-        start_y = 140
-        gap = 50
+        start_y = 135
+        gap = 44
 
         mx, my = pygame.mouse.get_pos()
 
@@ -211,6 +214,7 @@ class UI:
             (get_text("menu_play"), (60, 140, 60)),
             (get_text("menu_story"), (60, 100, 140)),
             (get_text("menu_shop"), (140, 100, 40)),
+            (get_text("menu_quests"), (140, 80, 100)),
             (get_text("menu_achievements"), (120, 80, 140)),
             (get_text("menu_statistics"), (80, 100, 120)),
             (get_text("menu_editor"), (100, 80, 60)),
@@ -224,7 +228,7 @@ class UI:
             y = start_y + i * gap
             rect = pygame.Rect(btn_x, y, btn_w, btn_h)
             hover = rect.collidepoint(mx, my)
-            draw_button(surface, text, font_manager.get_font(16),
+            draw_button(surface, text, font_manager.get_font(15),
                         (btn_x, y, btn_w, btn_h), color, hover=hover)
             self._menu_buttons.append(rect)
 
@@ -233,7 +237,7 @@ class UI:
         if event.type == pygame.MOUSEBUTTONDOWN:
             mx, my = event.pos
             actions = [
-                "play", "story", "shop", "achievements", "statistics",
+                "play", "story", "shop", "quests", "achievements", "statistics",
                 "editor", "custom_levels", "settings", "quit"
             ]
             for i, rect in enumerate(self._menu_buttons):
@@ -1197,4 +1201,183 @@ class UI:
             for play_btn, level_info in getattr(self, '_custom_buttons', []):
                 if play_btn.collidepoint(mx, my):
                     return level_info
+        return None
+
+    # ==================================================
+    # DAILY QUESTS
+    # ==================================================
+
+    def draw_daily_quests(self, surface):
+        """Draw daily quests screen."""
+        surface.fill((25, 25, 40))
+
+        title = get_text("quests_title")
+        title_font = font_manager.get_font(26)
+        title_surf = title_font.render(title, True, (255, 255, 255))
+        surface.blit(title_surf, (self.screen_width // 2 - title_surf.get_width() // 2, 20))
+
+        mx, my = pygame.mouse.get_pos()
+        back_rect = pygame.Rect(10, 10, 80, 35)
+        draw_button(surface, get_text("menu_back"), font_manager.get_font(14),
+                     (10, 10, 80, 35), (80, 80, 100), hover=back_rect.collidepoint(mx, my))
+
+        from daily_quests import quest_manager
+        lang = save_manager.get_language()
+
+        self._quest_claim_buttons = []
+
+        start_y = 80
+        card_h = 100
+        for i, q in enumerate(quest_manager.quests):
+            y = start_y + i * (card_h + 15)
+            rect = pygame.Rect(20, y, self.screen_width - 40, card_h)
+            draw_rounded_rect(surface, (45, 45, 65), rect, radius=10)
+            pygame.draw.rect(surface, (80, 100, 150), rect, width=1, border_radius=10)
+
+            q_title = q["title_ru"] if lang == "ru" else q["title_en"]
+            q_font = font_manager.get_font(16)
+            q_surf = q_font.render(q_title, True, (255, 255, 255))
+            surface.blit(q_surf, (35, y + 15))
+
+            progress = min(1.0, q["current"] / max(1, q["target"]))
+            bar_rect = pygame.Rect(35, y + 45, self.screen_width - 170, 16)
+            pygame.draw.rect(surface, (30, 30, 45), bar_rect, border_radius=8)
+            if progress > 0:
+                fill_w = max(10, int(bar_rect.w * progress))
+                pygame.draw.rect(surface, (80, 200, 120), (bar_rect.x, bar_rect.y, fill_w, bar_rect.h), border_radius=8)
+
+            p_text = f"{q['current']}/{q['target']}"
+            p_font = font_manager.get_font(12)
+            p_surf = p_font.render(p_text, True, (220, 220, 220))
+            surface.blit(p_surf, (bar_rect.x + 10, bar_rect.y + 1))
+
+            reward_text = f"+{q['reward']} coins"
+            r_surf = p_font.render(reward_text, True, (255, 215, 0))
+            surface.blit(r_surf, (35, y + 68))
+
+            btn_w = 90
+            btn_h = 36
+            btn_x = self.screen_width - 125
+            btn_y = y + card_h // 2 - btn_h // 2
+            btn_rect = pygame.Rect(btn_x, btn_y, btn_w, btn_h)
+
+            if q["claimed"]:
+                draw_button(surface, get_text("claimed"), font_manager.get_font(12),
+                            (btn_x, btn_y, btn_w, btn_h), (50, 80, 50), disabled=True)
+            elif q["completed"]:
+                hover = btn_rect.collidepoint(mx, my)
+                draw_button(surface, get_text("claim_reward"), font_manager.get_font(12),
+                            (btn_x, btn_y, btn_w, btn_h), (60, 140, 60), hover=hover)
+                self._quest_claim_buttons.append((btn_rect, i))
+            else:
+                draw_button(surface, f"{int(progress*100)}%", font_manager.get_font(12),
+                            (btn_x, btn_y, btn_w, btn_h), (60, 60, 80), disabled=True)
+
+    def handle_daily_quests(self, event):
+        """Handle daily quests screen interactions."""
+        if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+            return "back"
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            mx, my = event.pos
+            if pygame.Rect(10, 10, 80, 35).collidepoint(mx, my):
+                return "back"
+            from daily_quests import quest_manager
+            for rect, quest_idx in getattr(self, '_quest_claim_buttons', []):
+                if rect.collidepoint(mx, my):
+                    quest_manager.claim_reward(quest_idx)
+        return None
+
+    # ==================================================
+    # MODE SELECTION
+    # ==================================================
+
+    def draw_mode_select(self, surface):
+        """Draw mode selection screen with 9 game mode cards."""
+        surface.fill((20, 25, 38))
+
+        title = get_text("mode_select_title")
+        title_font = font_manager.get_font(24)
+        title_surf = title_font.render(title, True, (255, 255, 255))
+        surface.blit(title_surf, (self.screen_width // 2 - title_surf.get_width() // 2, 18))
+
+        mx, my = pygame.mouse.get_pos()
+        back_rect = pygame.Rect(10, 10, 80, 35)
+        draw_button(surface, get_text("menu_back"), font_manager.get_font(14),
+                     (10, 10, 80, 35), (80, 80, 100), hover=back_rect.collidepoint(mx, my))
+
+        modes = [
+            ("classic", "🌟", (50, 120, 70)),
+            ("lava", "🌋", (160, 60, 40)),
+            ("dark", "🌑", (60, 60, 100)),
+            ("gravity", "🌀", (100, 50, 150)),
+            ("time_attack", "⏱️", (160, 120, 30)),
+            ("hardcore", "💀", (130, 40, 40)),
+            ("mirror", "🪞", (40, 110, 140)),
+            ("boss", "👾", (140, 40, 110)),
+            ("ice", "🧊", (30, 130, 170)),
+        ]
+
+        self._mode_play_buttons = []
+        start_y = 65
+        card_h = 74
+        gap = 10
+
+        content_rect = pygame.Rect(0, start_y, self.screen_width, self.screen_height - start_y)
+        surface.set_clip(content_rect)
+
+        for i, (mode_id, icon, card_color) in enumerate(modes):
+            card_y = start_y + i * (card_h + gap) - int(getattr(self, 'mode_scroll', 0))
+            if card_y + card_h < start_y or card_y > self.screen_height:
+                continue
+
+            rect = pygame.Rect(12, card_y, self.screen_width - 24, card_h)
+            is_hover = rect.collidepoint(mx, my)
+
+            bg_color = lighten_color(card_color, 1.2) if is_hover else card_color
+            draw_rounded_rect(surface, bg_color, rect, radius=8)
+            pygame.draw.rect(surface, (255, 255, 255), rect, width=1, border_radius=8)
+
+            title_text = f"{icon} {get_text(f'mode_{mode_id}_title')}"
+            m_title_font = font_manager.get_font(15)
+            t_surf = m_title_font.render(title_text, True, (255, 255, 255))
+            surface.blit(t_surf, (22, card_y + 8))
+
+            desc_text = get_text(f"mode_{mode_id}_desc")
+            d_font = font_manager.get_font(11)
+            d_surf = d_font.render(desc_text, True, (210, 220, 240))
+            surface.blit(d_surf, (22, card_y + 28))
+
+            hs = save_manager.get_mode_high_score(mode_id)
+            hs_text = f"Record: {hs}"
+            hs_surf = d_font.render(hs_text, True, (255, 215, 0))
+            surface.blit(hs_surf, (22, card_y + 48))
+
+            btn_w = 75
+            btn_h = 32
+            btn_x = self.screen_width - 95
+            btn_y = card_y + card_h // 2 - btn_h // 2
+            btn_rect = pygame.Rect(btn_x, btn_y, btn_w, btn_h)
+
+            p_hover = btn_rect.collidepoint(mx, my)
+            draw_button(surface, get_text("menu_play"), font_manager.get_font(13),
+                         (btn_x, btn_y, btn_w, btn_h), (40, 160, 60), hover=p_hover, border_radius=6)
+            self._mode_play_buttons.append((rect, btn_rect, mode_id))
+
+        surface.set_clip(None)
+
+    def handle_mode_select(self, event):
+        """Handle mode selection interactions."""
+        if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+            return "back"
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            mx, my = event.pos
+            if pygame.Rect(10, 10, 80, 35).collidepoint(mx, my):
+                return "back"
+            for card_rect, btn_rect, mode_id in getattr(self, '_mode_play_buttons', []):
+                if btn_rect.collidepoint(mx, my) or card_rect.collidepoint(mx, my):
+                    return mode_id
+
+        if event.type == pygame.MOUSEWHEEL:
+            self.mode_scroll = getattr(self, 'mode_scroll', 0) - event.y * 25
+            self.mode_scroll = max(0, min(300, self.mode_scroll))
         return None

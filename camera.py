@@ -33,6 +33,7 @@ class Camera:
         # Shake effect
         self._shake_amount = 0
         self._shake_timer = 0
+        self._shake_duration = 0.3
         self._shake_offset_x = 0
         self._shake_offset_y = 0
 
@@ -50,6 +51,7 @@ class Camera:
         self.highest_y = 0
         self._shake_amount = 0
         self._shake_timer = 0
+        self._shake_duration = 0.3
         self._shake_offset_x = 0
         self._shake_offset_y = 0
         self.death_line_world_y = self.screen_height
@@ -93,8 +95,9 @@ class Camera:
         """Update screen shake effect."""
         if self._shake_timer > 0:
             self._shake_timer -= dt
+            progress = max(0.0, self._shake_timer / max(0.001, self._shake_duration))
+            intensity = self._shake_amount * progress
             import random
-            intensity = self._shake_amount * (self._shake_timer / max(0.01, self._shake_amount))
             self._shake_offset_x = random.uniform(-intensity, intensity)
             self._shake_offset_y = random.uniform(-intensity, intensity)
         else:
@@ -106,6 +109,7 @@ class Camera:
         """Start screen shake effect."""
         self._shake_amount = amount
         self._shake_timer = duration
+        self._shake_duration = duration
 
     def world_to_screen(self, world_x, world_y):
         """Convert world coordinates to screen coordinates."""

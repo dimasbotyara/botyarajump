@@ -39,6 +39,10 @@ DIFFICULTY_SETTINGS = {
         "disappearing_chance": 0.03,
         "moving_chance": 0.1,
         "spring_chance": 0.08,
+        "ice_chance": 0.06,
+        "sand_chance": 0.04,
+        "conveyor_chance": 0.05,
+        "portal_chance": 0.04,
         "coin_spawn_chance": 0.15,
         "enemy_speed_mult": 0.7,
         "platform_gap_mult": 0.85,
@@ -50,6 +54,10 @@ DIFFICULTY_SETTINGS = {
         "disappearing_chance": 0.06,
         "moving_chance": 0.15,
         "spring_chance": 0.06,
+        "ice_chance": 0.08,
+        "sand_chance": 0.07,
+        "conveyor_chance": 0.08,
+        "portal_chance": 0.03,
         "coin_spawn_chance": 0.1,
         "enemy_speed_mult": 1.0,
         "platform_gap_mult": 1.0,
@@ -61,6 +69,10 @@ DIFFICULTY_SETTINGS = {
         "disappearing_chance": 0.1,
         "moving_chance": 0.2,
         "spring_chance": 0.04,
+        "ice_chance": 0.10,
+        "sand_chance": 0.12,
+        "conveyor_chance": 0.10,
+        "portal_chance": 0.02,
         "coin_spawn_chance": 0.07,
         "enemy_speed_mult": 1.4,
         "platform_gap_mult": 1.2,
@@ -195,6 +207,17 @@ def get_default_save_data():
             "boosters_used": 0
         },
         "achievements": {},
+        "mode_high_scores": {
+            "classic": 0,
+            "lava": 0,
+            "dark": 0,
+            "gravity": 0,
+            "time_attack": 0,
+            "hardcore": 0,
+            "mirror": 0,
+            "boss": 0,
+            "ice": 0
+        },
         "story_progress": {
             "unlocked_level": 1,
             "stars": {
@@ -251,6 +274,10 @@ class SaveManager:
     # --- Convenience getters/setters ---
 
     @property
+    def save_data(self):
+        return self.data
+
+    @property
     def settings(self):
         return self.data["settings"]
 
@@ -262,9 +289,21 @@ class SaveManager:
     def unlocks(self):
         return self.data["unlocks"]
 
-    @property
-    def equipped(self):
-        return self.data["equipped"]
+    def get_mode_high_score(self, mode_id):
+        """Get high score for a specific mode."""
+        scores = self.data.get("mode_high_scores", {})
+        return scores.get(mode_id, 0)
+
+    def set_mode_high_score(self, mode_id, score):
+        """Set high score for a specific mode if higher."""
+        if "mode_high_scores" not in self.data:
+            self.data["mode_high_scores"] = {}
+        curr = self.data["mode_high_scores"].get(mode_id, 0)
+        if score > curr:
+            self.data["mode_high_scores"][mode_id] = score
+            self.save()
+            return True
+        return False
 
     @property
     def story_progress(self):
@@ -396,11 +435,12 @@ class SaveManager:
             return True
         return False
 
-    def earn_coins(self, amount):
-        """Add coins."""
+    def earn_coins(self, amount, persist=True):
+        """Add coins. persist=False skips saving to disk (useful for frequent calls)."""
         self.coins += amount
         self.add_stat("total_coins_collected", amount)
-        self.save()
+        if persist:
+            self.save()
 
     # --- Achievements ---
 

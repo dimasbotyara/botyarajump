@@ -29,6 +29,44 @@ TEXTS = {
         "en": "Statistics",
         "ru": "Статистика"
     },
+    "menu_quests": {
+        "en": "Daily Quests",
+        "ru": "Задания"
+    },
+    "quests_title": {
+        "en": "Daily Quests",
+        "ru": "Ежедневные Задания"
+    },
+    "claim_reward": {
+        "en": "Claim",
+        "ru": "Забрать"
+    },
+    "claimed": {
+        "en": "Claimed!",
+        "ru": "Получено!"
+    },
+    "mode_select_title": {
+        "en": "Select Game Mode",
+        "ru": "Выберите Режим Игры"
+    },
+    "mode_classic_title": {"en": "Classic", "ru": "Классика"},
+    "mode_classic_desc": {"en": "Standard endless jump gameplay", "ru": "Стандартный бесконечный прыжок"},
+    "mode_lava_title": {"en": "Rising Lava", "ru": "Восходящая Лава"},
+    "mode_lava_desc": {"en": "Escape the rising hot lava below!", "ru": "Убегай от раскаленной лавы снизу!"},
+    "mode_dark_title": {"en": "Dark Hunt", "ru": "Ночная Охота"},
+    "mode_dark_desc": {"en": "Pitch dark around, follow the spotlight", "ru": "Тьма вокруг, виден только свет фонарика"},
+    "mode_gravity_title": {"en": "Gravity Chaos", "ru": "Гравитационный Хаос"},
+    "mode_gravity_desc": {"en": "Physics change randomly every 15s", "ru": "Физика меняется каждые 15 секунд"},
+    "mode_time_attack_title": {"en": "Time Attack", "ru": "Гонка со Временем"},
+    "mode_time_attack_desc": {"en": "30s timer! Jump and collect to gain time", "ru": "Таймер 30 сек! Прыжки дают секунды"},
+    "mode_hardcore_title": {"en": "Hardcore", "ru": "Хардкор"},
+    "mode_hardcore_desc": {"en": "No powerups, no shields, 1 life", "ru": "Без бонусов, без щитов, 1 жизнь"},
+    "mode_mirror_title": {"en": "Mirror World", "ru": "Зеркальный Мир"},
+    "mode_mirror_desc": {"en": "Left is Right, Right is Left!", "ru": "Управление инвертировано (влево = вправо)"},
+    "mode_boss_title": {"en": "Boss Mayhem", "ru": "Атака Боссов"},
+    "mode_boss_desc": {"en": "High enemy density & dangerous UFOs", "ru": "Толпы монстров и стреляющих НЛО"},
+    "mode_ice_title": {"en": "Ice Avalanche", "ru": "Ледяной Обвал"},
+    "mode_ice_desc": {"en": "All icy platforms + falling icicles!", "ru": "Все платформы изо льда + падающие сосульки!"},
     "menu_editor": {
         "en": "Level Editor",
         "ru": "Редактор уровней"
