@@ -687,6 +687,13 @@ class Game:
                     self.state = GameState.STORY_PLAYING
                     self.ui.state = UIState.STORY_PLAYING
 
+        elif ui_state == UIState.MODE_SELECT:
+            action = self.ui.handle_mode_select(event)
+            if action == "back":
+                self.ui.state = UIState.MAIN_MENU
+            elif action:
+                self.start_new_game(action)
+
         elif ui_state == UIState.CUSTOM_LEVELS:
             action = self.ui.handle_custom_levels(event)
             if action == "back":
@@ -858,6 +865,9 @@ class Game:
 
         elif ui_state == UIState.STORY_SELECT:
             self.ui.draw_story_select(self.screen)
+
+        elif ui_state == UIState.MODE_SELECT:
+            self.ui.draw_mode_select(self.screen)
 
         elif ui_state == UIState.CUSTOM_LEVELS:
             self.ui.draw_custom_levels(self.screen)

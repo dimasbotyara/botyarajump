@@ -289,6 +289,10 @@ class SaveManager:
     def unlocks(self):
         return self.data["unlocks"]
 
+    @property
+    def equipped(self):
+        return self.data["equipped"]
+
     def get_mode_high_score(self, mode_id):
         """Get high score for a specific mode."""
         scores = self.data.get("mode_high_scores", {})
@@ -441,6 +445,10 @@ class SaveManager:
         self.add_stat("total_coins_collected", amount)
         if persist:
             self.save()
+
+    def add_coins(self, amount):
+        """Add coins to save data (alias for earn_coins)."""
+        self.earn_coins(amount, persist=True)
 
     # --- Achievements ---
 

@@ -71,6 +71,8 @@ class Shop:
     def handle_event(self, event):
         """Handle input events. Returns 'back' if back button pressed."""
         if event.type == pygame.MOUSEBUTTONDOWN:
+            if event.button != 1:
+                return None
             mx, my = event.pos
 
             # Back button

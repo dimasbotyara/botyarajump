@@ -152,6 +152,8 @@ class UI:
     def handle_language_select(self, event):
         """Handle language selection. Returns True if language selected."""
         if event.type == pygame.MOUSEBUTTONDOWN:
+            if event.button != 1:
+                return False
             mx, my = event.pos
             btn_w = 200
             btn_x = self.screen_width // 2 - btn_w // 2
@@ -235,6 +237,8 @@ class UI:
     def handle_main_menu(self, event):
         """Handle main menu clicks. Returns action string or None."""
         if event.type == pygame.MOUSEBUTTONDOWN:
+            if event.button != 1:
+                return None
             mx, my = event.pos
             actions = [
                 "play", "story", "shop", "quests", "achievements", "statistics",
@@ -325,6 +329,8 @@ class UI:
     def handle_pause(self, event):
         """Handle pause screen. Returns 'resume', 'restart', 'menu', or None."""
         if event.type == pygame.MOUSEBUTTONDOWN:
+            if event.button != 1:
+                return None
             mx, my = event.pos
             actions = ["resume", "restart", "menu"]
             for i, rect in enumerate(self._pause_buttons):
@@ -924,6 +930,8 @@ class UI:
         if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
             return "back"
         if event.type == pygame.MOUSEBUTTONDOWN:
+            if event.button != 1:
+                return None
             if pygame.Rect(10, 10, 80, 35).collidepoint(event.pos):
                 return "back"
         if event.type == pygame.MOUSEWHEEL:
@@ -1002,6 +1010,8 @@ class UI:
         if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
             return "back"
         if event.type == pygame.MOUSEBUTTONDOWN:
+            if event.button != 1:
+                return None
             if pygame.Rect(10, 10, 80, 35).collidepoint(event.pos):
                 return "back"
         if event.type == pygame.MOUSEWHEEL:
@@ -1088,6 +1098,8 @@ class UI:
         if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
             return "back"
         if event.type == pygame.MOUSEBUTTONDOWN:
+            if event.button != 1:
+                return None
             mx, my = event.pos
             if pygame.Rect(10, 10, 80, 35).collidepoint(mx, my):
                 return "back"
@@ -1192,6 +1204,8 @@ class UI:
         if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
             return "back"
         if event.type == pygame.MOUSEBUTTONDOWN:
+            if event.button != 1:
+                return None
             mx, my = event.pos
             if pygame.Rect(10, 10, 80, 35).collidepoint(mx, my):
                 return "back"
@@ -1278,6 +1292,8 @@ class UI:
         if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
             return "back"
         if event.type == pygame.MOUSEBUTTONDOWN:
+            if event.button != 1:
+                return None
             mx, my = event.pos
             if pygame.Rect(10, 10, 80, 35).collidepoint(mx, my):
                 return "back"
@@ -1370,6 +1386,8 @@ class UI:
         if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
             return "back"
         if event.type == pygame.MOUSEBUTTONDOWN:
+            if event.button != 1:
+                return None
             mx, my = event.pos
             if pygame.Rect(10, 10, 80, 35).collidepoint(mx, my):
                 return "back"
