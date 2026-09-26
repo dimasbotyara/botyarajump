@@ -2,7 +2,10 @@
 
 > **A juice-infused Doodle Jump–style platformer with 9 game modes, skin passives, daily quests, a story campaign, and a built-in level editor.** Pure Pygame-CE, zero engine bloat.
 
-![Python](https://img.shields.io/badge/Python-3.10%2B-blue.svg)
+![Python CI](https://github.com/dimasbotyara/botyarajump/actions/workflows/python-app.yml/badge.svg)
+![Python 3.10](https://img.shields.io/badge/python-3.10-blue.svg)
+![Python 3.11](https://img.shields.io/badge/python-3.11-blue.svg)
+![Python 3.12](https://img.shields.io/badge/python-3.12-blue.svg)
 ![Pygame-CE](https://img.shields.io/badge/Engine-Pygame--CE%202.5%2B-green.svg)
 ![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20Linux%20%7C%20macOS-orange.svg)
 ![License](https://img.shields.io/badge/License-MIT-purple.svg)
