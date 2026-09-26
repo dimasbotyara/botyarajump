@@ -1,134 +1,253 @@
-# 🦘 Botyara Jump
+# 🦘 botyarajump
+
+> **A juice-infused Doodle Jump–style platformer with 9 game modes, skin passives, daily quests, a story campaign, and a built-in level editor.** Pure Pygame-CE, zero engine bloat.
 
 ![Python](https://img.shields.io/badge/Python-3.10%2B-blue.svg)
 ![Pygame-CE](https://img.shields.io/badge/Engine-Pygame--CE%202.5%2B-green.svg)
 ![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20Linux%20%7C%20macOS-orange.svg)
 ![License](https://img.shields.io/badge/License-MIT-purple.svg)
 
-An action-packed, juice-infused **Doodle Jump–style platformer** built with **Pygame-CE**. Featuring 9 unique game modes, daily quests, shop skin passives, dynamic squash & stretch physics, particle effects, story campaign, and an in-game level editor!
+---
+
+## ✨ Features
+
+### 🎮 9 Unique Endless Game Modes
+Every mode flips the formula:
+
+| Mode | Twist |
+|------|-------|
+| 🌟 **Classic** | The timeless balance — all powerups, no surprises |
+| 🌋 **Rising Lava** | Escape molten lava climbing from below |
+| 🌑 **Dark Hunt** | Pitch-dark world with a flashlight spotlight around you |
+| 🌀 **Gravity Chaos** | Gravity shifts every 15s — moon, heavy, hyper speed |
+| ⏱️ **Time Attack** | 30-second clock; gain time by jumping, coins, and kills |
+| 💀 **Hardcore** | No powerups, no shields, 1 life, brutal gaps |
+| 🪞 **Mirror World** | Reversed controls to melt your brain |
+| 👾 **Boss Mayhem** | UFOs and shooting clouds everywhere |
+| 🧊 **Ice Avalanche** | Slippery platforms + falling icicles |
+
+### 🎭 Skin Passive Abilities
+Each skin isn't just cosmetic — it changes how you play:
+
+- 🥷 **Ninja** — mid-air **Double Jump**
+- 🪙 **Gold** — coin magnet + 25% extra coins
+- 👻 **Ghost** — free **shield** that absorbs one lethal hit
+- 🤖 **Robot** — rapid-fire **laser blaster**
+- 🌈 **Rainbow** — +15% jump velocity
+- ⚡ **Neon** — +25% movement speed
+- 🧊 **Blue** — immune to ice platform slipping
+
+Mix and match with the mode of your choice — Hardcore + Ghost is a completely different game from Classic + Neon.
+
+### 📅 Daily Quests
+3 unique challenges generated every day, each worth coin rewards. Come back daily — the quests rotate.
+
+### 🧊 8+ Interactive Platform Types
+- **Normal** — the reliable bread and butter
+- **Moving** — slides horizontally
+- **Breakable** — one jump and it's gone
+- **Disappearing** — vanishes after you touch it
+- **Spring** — super jump
+- **Ice** — slippery (unless you're Blue skin)
+- **Sand** — collapses after a short delay
+- **Conveyor** — pushes you sideways
+- **Portal** — teleports you across the level
+
+### 📜 Story Mode + Level Editor
+- **Story Mode** — multi-stage campaign with star ratings
+- **Level Editor** — drag-and-drop level builder with **JSON export/import**
+- Ship with `levels/level_1.json` through `level_5.json`, plus a `custom_levels/` folder for your own creations
+- Share your levels as plain JSON
+
+### 🎨 Juice & Visuals
+- **Dynamic squash & stretch** body deformation
+- **Camera screen shake** on impacts
+- **Trail effects** and custom **particle systems** (`particles.py`)
+- **Combo system** (`combo.py`) for chained jumps
+- **Coins** with pickup effects (`coins.py`)
+- **Powerups** and **boosters** — 4 booster slots bound to `1`–`4`
+
+### 🏆 Progression
+- **Achievements** system (`achievements.py`)
+- **Shop** with skin unlocks (`shop.py`)
+- Persistent `save_data.json` keeps your coins, unlocks, and progress
+- **Daily quest tracking**
+
+### 🌍 Localization
+- **EN / RU** translation out of the box (`localization.py`)
+
+### 🎛️ Fully Remappable Controls
+Everything bindable in Settings — including the four booster hotkeys.
 
 ---
 
-## 🔥 Key Features
-
-- 🎮 **9 Unique Endless Game Modes**:
-  - 🌟 **Classic** — Timeless jumping balance with all powerups.
-  - 🌋 **Rising Lava** — Escape the rising molten lava below.
-  - 🌑 **Dark Hunt** — Pitch dark world with a spotlight flashlight around your character.
-  - 🌀 **Gravity Chaos** — Dynamic gravity shifts every 15 seconds (moon gravity, heavy gravity, hyper speed).
-  - ⏱️ **Time Attack** — Race against a 30s ticking clock; gain time by jumping, collecting coins, and defeating monsters.
-  - 💀 **Hardcore** — No powerups, no shields, 1 life, and unforgiving platform gaps.
-  - 🪞 **Mirror World** — Reversed controls test your brain & agility.
-  - 👾 **Boss Mayhem** — High density of hostile UFOs and shooting clouds.
-  - 🧊 **Ice Avalanche** — 100% slippery ice platforms + falling icicle hazards.
-- 📅 **Daily Quests System**: 3 unique daily challenges generated every day with coin rewards.
-- 🎭 **Skin Passive Abilities**:
-  - 🥷 **Ninja**: Mid-air Double Jump.
-  - 🪙 **Gold**: Coin magnet + 25% extra coins.
-  - 👻 **Ghost**: Shield absorbing 1 lethal hit per run.
-  - 🤖 **Robot**: Rapid-fire laser blaster.
-  - 🌈 **Rainbow**: +15% jump velocity.
-  - ⚡ **Neon**: +25% movement speed.
-  - 🧊 **Blue**: Immunity to ice platform slipping.
-- 🧊 **8+ Interactive Platform Types**: Normal, Moving, Breakable, Disappearing, Spring, Ice, Sand (collapsing), Conveyor, and Portal.
-- 🎨 **Visuals & Juice**: Dynamic squash & stretch body deformation, camera screen shakes, trail effects, and custom particle systems.
-- 🛠️ **Built-in Level Editor**: Full drag-and-drop level creation tool with JSON export/import.
-- 📜 **Story Mode**: Multi-stage campaign mode with custom star ratings.
-
----
-
-## ⚡ Quick Start
+## 🚀 Quick Start
 
 ### 🚀 One-Click Launchers
-Simply run the launcher script for your platform:
 
-- **Linux / macOS**:
-  ```bash
-  ./run.sh
-  ```
-- **Windows (CMD)**:
-  ```cmd
-  run.bat
-  ```
-- **Windows (PowerShell)**:
-  ```powershell
-  .\run.ps1
-  ```
-
----
+```bash
+./run.sh          # Linux / macOS
+run.bat           # Windows (CMD)
+.\run.ps1         # Windows (PowerShell)
+```
 
 ### 📦 Manual Installation
 
-1. **Clone the repository**:
-   ```bash
-   git clone https://github.com/dimasbotyara/botyarajump.git
-   cd botyarajump
-   ```
+```bash
+git clone https://github.com/dimasbotyara/botyarajump.git
+cd botyarajump
 
-2. **Create and activate a virtual environment**:
-   ```bash
-   python -m venv .venv
-   source .venv/bin/activate        # Linux / macOS
-   # OR
-   .venv\Scripts\activate           # Windows
-   ```
+python -m venv .venv
+source .venv/bin/activate       # Linux / macOS
+# .venv\Scripts\activate        # Windows
 
-3. **Install dependencies**:
-   ```bash
-   pip install -r requirements.txt
-   ```
+pip install -r requirements.txt
+python main.py
+```
 
-4. **Run the game**:
-   ```bash
-   python main.py
-   ```
+**Requires:** Python 3.10+ and **Pygame-CE 2.5+** (Community Edition).
 
 ---
 
 ## 🎮 Default Controls
 
-| Action | Primary Key | Secondary Key |
+| Action | Primary | Secondary |
 | :--- | :---: | :---: |
-| **Move Left** | `Left Arrow` | `A` |
-| **Move Right** | `Right Arrow` | `D` |
-| **Shoot Blaster** | `Up Arrow` | `W` |
-| **Pause / Resume** | `Escape` | `P` |
-| **Use Boosters** | `1`, `2`, `3`, `4` | Custom |
+| **Move Left** | `←` | `A` |
+| **Move Right** | `→` | `D` |
+| **Shoot Blaster** | `↑` | `W` |
+| **Pause / Resume** | `Esc` | `P` |
+| **Use Boosters** | `1` `2` `3` `4` | remappable |
 
-> 💡 *All controls can be fully remapped in the **Settings** menu.*
+> 💡 Everything can be rebound in **Settings**.
 
 ---
 
-## 📂 Project Architecture
+## 📂 Project Structure
 
-```text
+```
 botyarajump/
-├── main.py              # Application entry point
-├── game.py              # Main loop, states, and game modes controller
-├── player.py            # Physics, skin passives, squash/stretch
-├── platforms.py         # Platform types and level generator
-├── enemies.py           # Enemy AI, snakes, UFOs, and collisions
-├── daily_quests.py      # Daily Quest Manager & reward system
-├── shop.py              # Shop UI & skin abilities
-├── level_editor.py      # Integrated Level Editor
-├── ui.py                # UI screens, Mode Select, HUD, and buttons
-├── renderer.py          # Graphics, shapes, and drawing routines
-├── particles.py         # Particle emitters (trails, portals, stomps)
-├── settings.py          # SaveManager & settings persistence
-├── localization.py      # Multi-language translation support (EN / RU)
-├── run.sh / run.bat     # One-click launchers for Linux & Windows
-└── save_data.json       # Game progress (auto-generated)
+├── main.py              # 🎯 Entry point
+├── game.py              # Main loop, states, game-mode controller
+├── player.py            # Physics, skin passives, squash & stretch
+├── platforms.py         # 9 platform types + procedural generator
+├── enemies.py           # Snakes, UFOs, clouds — AI + collisions
+├── powerups.py          # In-run powerups
+├── boosters.py          # Active boosters (1-4 keys)
+├── coins.py             # Coin pickup logic + magnet
+├── combo.py             # Combo chain tracker
+├── camera.py            # Camera, shake, parallax
+├── particles.py         # Trail, portal, stomp emitters
+├── renderer.py          # All drawing routines
+├── ui.py                # Menus, mode select, HUD, buttons
+├── level_editor.py      # Drag & drop level builder
+├── story_mode.py        # Campaign progression + stars
+├── daily_quests.py      # Daily challenge generator & tracking
+├── achievements.py      # Achievement tracker
+├── shop.py              # Skin shop + passive abilities
+├── settings.py          # SaveManager & config persistence
+├── localization.py      # EN / RU strings
+├── utils.py             # Shared helpers
+├── levels/              # 📁 level_1.json … level_5.json
+├── custom_levels/       # 📁 your own creations
+├── save_data.json       # Auto-generated progress
+├── run.sh / .bat / .ps1 # Launchers
+├── requirements.txt
+└── LICENSE
 ```
 
 ---
 
-## 📝 License
+## 🛠️ Tech Stack
 
-Distributed under the **MIT License**. See `LICENSE` for more information.
+| Layer | Technology |
+|---|---|
+| **Language** | Python 3.10+ |
+| **Engine** | Pygame-CE 2.5+ |
+| **Physics** | Custom (squash & stretch, dynamic gravity) |
+| **Data** | JSON (levels, save file, custom levels) |
+| **i18n** | Built-in (EN / RU) |
+
+Zero external Python dependencies beyond `pygame-ce` — everything else is hand-rolled.
+
+---
+
+## 🔧 Customization
+
+### Creating your own levels
+Use the **in-game Level Editor** → drag platforms, place hazards, save. Levels export as JSON to `custom_levels/` and can be shared as plain text.
+
+### Adding a new game mode
+Each mode is a config block in `game.py`. Copy a mode's dict, tweak the gravity / powerup rules / enemy density, and add it to the mode-select list in `ui.py`.
+
+### Adding a new skin passive
+Add an entry to `shop.py`, then read it in `player.py` at runtime to change jump velocity, speed, double-jump availability, etc.
+
+### Tweaking juice
+`particles.py`, `camera.py`, and `player.py` hold all the squash/stretch, shake, and trail parameters.
+
+---
+
+## 🐛 Troubleshooting
+
+**`pygame` module not found**
+- Install **pygame-ce**, not the original pygame: `pip install pygame-ce`. The project relies on CE-specific rendering.
+
+**`run.sh` permission denied**
+- `chmod +x run.sh`
+
+**High scores aren't saving**
+- Check that `save_data.json` is writable in the project directory. Some sandboxed environments block file writes there — move the project out of a restricted path.
+
+**Level editor crashes on save**
+- Make sure `custom_levels/` exists. The launchers create it automatically, but manual installs might skip it.
+
+**Story mode stars wrong after editing levels**
+- Stars are stored per stage in `save_data.json`. Delete the file to reset progress.
+
+---
+
+## 🚧 Roadmap
+
+- ✅ 9 endless modes
+- ✅ Daily quests
+- ✅ Skin passives
+- ✅ Story campaign
+- ✅ Level editor
+- ⬜ Community level browser (via URL paste)
+- ⬜ More skins
+
+---
+
+## ⚠️ Disclaimer
+
+This is a **fan-made platformer inspired by Doodle Jump**. Not affiliated with the original creators. All art, code, and audio in this repo are original or properly licensed — see `LICENSE`.
+
+---
+
+## 📜 License
+
+Distributed under the **MIT License**. See [LICENSE](LICENSE).
 
 ---
 
 ## 💖 Acknowledgements
 
-- Built with **[Pygame-CE](https://pyga.me)** (Community Edition).
-- Inspired by the classic **Doodle Jump**.
+- Built with **[Pygame-CE](https://pyga.me)** (Community Edition)
+- Inspired by the classic **Doodle Jump**
+
+---
+
+## 👤 Author
+
+**dimasbotyara** — [@dimasbotyara](https://github.com/dimasbotyara)
+
+Made with 🦘, ☕, and an unhealthy love for squash & stretch.
+
+---
+
+<div align="center">
+
+**If you bounced your way to a new high score, drop a ⭐**
+
+</div>
